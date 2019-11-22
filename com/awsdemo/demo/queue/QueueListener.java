@@ -16,6 +16,9 @@ public class QueueListener implements ApplicationListener<ContextRefreshedEvent>
     private DeferredResultHolder resultHolder;
     private Logger logger = LoggerFactory.getLogger(getClass());
     private static String INDEX = "index";
+    private static String RE_INDEX = "redirect:/client/index";
+    private static String RE_UPLOAD = "redirect:/client/upload";
+    private static String TEST = "redirect:/client/test";
     @Override
     @Async("taskAsyncPool")
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
@@ -49,7 +52,7 @@ public class QueueListener implements ApplicationListener<ContextRefreshedEvent>
                     if (orderNumber.startsWith("RFO")) orderType = "Rename Folder Order";
                     if (orderNumber.startsWith("RFI")) orderType = "Rename File Order";
                     if (orderNumber.startsWith("INDEX")) orderType = INDEX;
-                    else orderType = "succeed";
+                    if (orderNumber.startsWith("UPLOAD")) orderType = RE_UPLOAD;
                     logger.info("Retrun Order Status: " + orderNumber);
                     logger.info("Place " + orderType + " Success. Order Number: " + orderNumber);
                     resultHolder.getMap().get(orderNumber).setResult(orderType);

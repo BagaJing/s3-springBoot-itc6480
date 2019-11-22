@@ -180,6 +180,7 @@ public class amazonClientImpl implements amazonClient {
      * return a succeed message/exception
      */
     @Override
+   // @Transactional
     public String batchUploadFiles(MultipartFile[] files,String dir){
       //  System.out.println("Hi Controller. THis is S3cilent. I am using Thread "+Thread.currentThread().getName()+" I will upload the files");
         String response = "";

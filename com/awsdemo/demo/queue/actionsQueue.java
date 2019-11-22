@@ -41,15 +41,17 @@ public class actionsQueue {
         queue.offer(placeOrder);
     }
     @Async("taskAsyncPool")
-    public void setUploadOrder(String placeOrder, MultipartFile[] files,String dir){
+    public void setUploadOrder(String placeOrder, MultipartFile[] files,String dir,RedirectAttributes attributes){
            logger.info("Upload Order Request Received: "+placeOrder);
            String uploadResponse = "";
            try{
                uploadResponse = amazonClient.batchUploadFiles(files,dir);
+
            }catch (Exception e){
                e.printStackTrace();
            }
            if (uploadResponse.equals("Completed")){
+               attributes.addFlashAttribute("dir",dir);
                queue.offer(placeOrder);
                logger.info("Upload Order Request Finished: "+placeOrder);
            }

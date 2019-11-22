@@ -39,7 +39,7 @@ public class bucketController {
     public DeferredResult<String> Upload(@RequestParam(value = "files") MultipartFile[] files,@RequestParam(value = "subDir") String dir){
         logger.info("Main Thread receive upload task ");
         String orderNum = "UP"+utils.getRandomOrderNum(DEFALUT_ORDER_LENGTH);
-        myQueue.setUploadOrder(orderNum,files,dir);
+       // myQueue.setUploadOrder(orderNum,files,dir);
 
         DeferredResult<String> result = new DeferredResult<>();
         resultHolder.getMap().put(orderNum,result);
