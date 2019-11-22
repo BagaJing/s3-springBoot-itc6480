@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,7 +15,9 @@ public class QueueListener implements ApplicationListener<ContextRefreshedEvent>
     @Autowired
     private DeferredResultHolder resultHolder;
     private Logger logger = LoggerFactory.getLogger(getClass());
+    private static String INDEX = "index";
     @Override
+    @Async("taskAsyncPool")
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
         /*
         new Thread(()->{
@@ -38,7 +41,6 @@ public class QueueListener implements ApplicationListener<ContextRefreshedEvent>
            }
         }).start();
          */
-        new Thread(()->{
             while (true) {
                 if (!theQueue.getQueue().isEmpty()) {
                     String orderNumber = theQueue.getQueue().poll();
@@ -46,8 +48,11 @@ public class QueueListener implements ApplicationListener<ContextRefreshedEvent>
                     if (orderNumber.startsWith("UP")) orderType = "Upload Order";
                     if (orderNumber.startsWith("RFO")) orderType = "Rename Folder Order";
                     if (orderNumber.startsWith("RFI")) orderType = "Rename File Order";
+                    if (orderNumber.startsWith("INDEX")) orderType = INDEX;
+                    else orderType = "succeed";
                     logger.info("Retrun Order Status: " + orderNumber);
-                    resultHolder.getMap().get(orderNumber).setResult("Place " + orderType + " Success. Order Number: " + orderNumber);
+                    logger.info("Place " + orderType + " Success. Order Number: " + orderNumber);
+                    resultHolder.getMap().get(orderNumber).setResult(orderType);
                 }else {
                     try {
                         Thread.sleep(100);
@@ -56,6 +61,5 @@ public class QueueListener implements ApplicationListener<ContextRefreshedEvent>
                     }
                 }
             }
-        }).start();
     }
 }

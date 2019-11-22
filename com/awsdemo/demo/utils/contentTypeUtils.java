@@ -1,6 +1,8 @@
 package com.awsdemo.demo.utils;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 public class contentTypeUtils {
     private static final String[][] MIME_strTable ={
@@ -66,7 +68,6 @@ public class contentTypeUtils {
             {".png", "image/png"},
 
             //application
-            {"", "application/octet-stream"},
             {".bin", "application/octet-stream"},
             {".class", "application/octet-stream"},
             {".exe", "application/octet-stream"},
@@ -86,7 +87,6 @@ public class contentTypeUtils {
             {".msg", "application/vnd.ms-outlook"},
             {".pdf", "application/pdf"},
             //vnd.ms-powerpoint
-            {"", "application/vnd.ms-powerpoint"},
             {".pps", "application/vnd.ms-powerpoint"},
             {".ppt", "application/vnd.ms-powerpoint"},
 
@@ -111,6 +111,26 @@ public class contentTypeUtils {
         if (suffix==null || suffix.trim()=="") return "application/octet-stream";
         if (!typesMap.containsKey(suffix)) return "application/octet-stream";
         else return typesMap.get(suffix);
+    }
+
+    public static List<List<String>> addTypes(List<String> target){
+        initializeMap();
+        List<List<String>> res = new LinkedList<>();
+        List<String> unit = new LinkedList<>();
+        String suffix = "";
+        for (String name : target){
+            String path = name.substring(name.indexOf("/")+1);
+            if (!path.equals("")) unit.add(path);
+            else continue;
+            unit.add(name.substring(name.lastIndexOf("/")+1));
+            if(name.contains(".")) suffix = name.substring(name.lastIndexOf("."));
+            if (suffix.equals("")) unit.add("");
+            else unit.add(typesMap.getOrDefault(suffix,""));
+            res.add(new LinkedList<>(unit));
+            unit.clear();
+            suffix = "";
+        }
+        return res;
     }
     /*
     public static void main(String[] args){

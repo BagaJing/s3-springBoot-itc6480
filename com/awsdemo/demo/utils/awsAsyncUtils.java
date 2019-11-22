@@ -50,6 +50,7 @@ public class awsAsyncUtils {
     private String generateFileName(MultipartFile file){
         return new Date().getTime()+"-"+file.getOriginalFilename().replace(" ","_");
     }
+    /*
     public void printProgressBar(double pct){
         final int bar_size = 40;
         final String empty_bar = "                                        ";
@@ -63,4 +64,6 @@ public class awsAsyncUtils {
         final String erase_bar = "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b";
         System.out.format(erase_bar);
     }
+
+     */
 }
