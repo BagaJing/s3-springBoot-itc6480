@@ -85,4 +85,15 @@ public class clientController {
         resultHolder.getMap().put(placeOrder,result);
         return result;
     }
+    @PostMapping("/renameFolder")
+    public DeferredResult<String> rename_folder(@RequestParam("oldName") String oldName,
+                                                @RequestParam("root") String root,
+                                                @RequestParam("newName") String newName,
+                                                RedirectAttributes attributes){
+        String placeOrder = "RENAME"+utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
+        actionsQueue.setRenameFolderOrder(placeOrder,folderName,oldName,newName,root,attributes);
+        DeferredResult<String> result = new DeferredResult<>();
+        resultHolder.getMap().put(placeOrder,result);
+        return result;
+    }
 }

@@ -89,7 +89,7 @@ public class bucketController {
     public DeferredResult<String> renameFolder(@RequestParam(value = "oldName") String oldName,@RequestParam(value = "newName") String newName){
         logger.info("Main Thread receive folder rename task");
         String order = "RFO"+utils.getRandomOrderNum(DEFALUT_ORDER_LENGTH);
-        myQueue.setRenameFolderOrder(order,oldName,newName);
+        //myQueue.setRenameFolderOrder(order,oldName,newName);
         DeferredResult<String> result = new DeferredResult<String>();
         resultHolder.getMap().put(order,result);
         logger.info("Main Thread release");

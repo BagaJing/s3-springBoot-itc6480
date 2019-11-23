@@ -26,9 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
@@ -106,7 +104,7 @@ public class amazonClientImpl implements amazonClient {
              */
             String path = folderName;
             // path: rootFolder Name dir: relative path
-            path = path + (dir.equals("")? "":"/"+dir);
+            path = path + (dir.equals("")? "":dir);
             logger.info("path "+path);
             MultipleFileUpload upload = transfer.uploadFileList(bucketName,path,new File("."),files);
             //amazonUtils.printProgressBar(0.0);
@@ -277,12 +275,14 @@ public class amazonClientImpl implements amazonClient {
     public boolean reNameFolder(String oldFolder, String newFolder) {
         boolean res = false;
         logger.info("refolder function called");
+        Stack<String> subFoldersHolder = new Stack<>(); //load the path of sub folders
         try {
             List<String> nameList = getKeyFromS3Bucket(oldFolder);
             //System.out.println(nameList);
             List<CopyObjectRequest> copyRequests = new LinkedList<>();
             for (String name : nameList) {
-                String newName = name.replaceFirst(oldFolder,newFolder);
+                String newName = newFolder+name.substring(name.lastIndexOf("/"));
+                logger.info(newName);
                 CopyObjectRequest copyObjectRequest = new CopyObjectRequest(bucketName, name, bucketName, newName);
                 copyRequests.add(copyObjectRequest);
             }
@@ -297,6 +297,32 @@ public class amazonClientImpl implements amazonClient {
             e.printStackTrace();
         }
         return res;
+    }
+
+    @Override
+    public Stack<String> reNameFolder_stack(String oldFolder, String newFolder) {
+        logger.info("refolder function called");
+        Stack<String> subFoldersHolder = new Stack<>(); //load the path of sub folders
+        try {
+            List<String> nameList = getKeyFromS3Bucket(oldFolder);
+            //System.out.println(nameList);
+            List<CopyObjectRequest> copyRequests = new LinkedList<>();
+            for (String name : nameList) {
+                String newName = newFolder+name.substring(name.lastIndexOf("/"));
+                logger.info(newName);
+                CopyObjectRequest copyObjectRequest = new CopyObjectRequest(bucketName, name, bucketName, newName);
+                copyRequests.add(copyObjectRequest);
+            }
+            for (CopyObjectRequest request : copyRequests) {
+                s3Client.copyObject(request);
+            }
+            for (String oldFile : nameList) {
+                deleteFile(oldFile);
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return subFoldersHolder;
     }
 }
 

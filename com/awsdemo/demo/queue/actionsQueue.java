@@ -46,7 +46,9 @@ public class actionsQueue {
     public void setUploadOrder(String placeOrder, MultipartFile[] files,String dir,String folder,RedirectAttributes attributes){
            logger.info("Upload Order Request Received: "+placeOrder);
            String uploadResponse = "";
+           String returnDir = dir; // the value to redirect
            dir = dir + (folder.equals("")? "":"/"+folder);
+           if (!dir.startsWith("/")) dir = "/"+dir;
            logger.info("dir "+dir);
            try{
                uploadResponse = amazonClient.batchUploadFiles(files,dir);
@@ -55,7 +57,7 @@ public class actionsQueue {
                e.printStackTrace();
            }
            if (uploadResponse.equals("Completed")){
-               attributes.addFlashAttribute("dir",dir);
+               attributes.addFlashAttribute("dir",returnDir);
                queue.offer(placeOrder);
                logger.info("Upload Order Request Finished: "+placeOrder);
            }
@@ -98,20 +100,27 @@ public class actionsQueue {
 
 
     }
-    public  void setRenameFolderOrder(String placeOrder,String oldName,String newName){
-        new Thread(()->{
+    @Async("taskAsyncPool")
+    public  void setRenameFolderOrder(String placeOrder,
+                                      String parent,
+                                      String oldName,
+                                      String newName,
+                                      String root,
+                                      RedirectAttributes attributes){
            logger.info("Rename Folder Order Request Received: "+placeOrder);
-           boolean rfoResponse = false;
+            oldName = (root.equals("")? "":root+"/")+oldName;
+            newName = parent+"/"+(root.equals("")? "":root+"/")+newName;
+            logger.info("RenameFolder Debug oldName "+oldName);
+            logger.info("RenameFolder Debug newBane "+newName);
            try{
-               rfoResponse = amazonClient.reNameFolder(oldName,newName);
+               amazonClient.reNameFolder(oldName,newName);
+               attributes.addFlashAttribute("dir",root);
            }catch (Exception e){
                logger.error("Rename process exception",e);
            }
-           if (rfoResponse){
                queue.offer(placeOrder);
                logger.info("Rename Folder Order Request Finished: "+placeOrder);
-           }
-        }).start();
+
     }
     public Queue<String> getQueue() {
         return queue;

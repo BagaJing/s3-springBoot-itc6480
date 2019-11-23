@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Stack;
 import java.util.concurrent.Future;
 
 public interface amazonClient {
@@ -18,4 +19,5 @@ public interface amazonClient {
      void deleteFile(String fileName);
      boolean renameFile(String oldName,String newName);
      boolean reNameFolder(String oldFolder,String newFolder);
+     Stack<String> reNameFolder_stack(String oldFolder, String newFolder);
 }
