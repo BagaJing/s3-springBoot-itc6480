@@ -47,6 +47,7 @@ public class actionsQueue {
            logger.info("Upload Order Request Received: "+placeOrder);
            String uploadResponse = "";
            dir = dir + (folder.equals("")? "":"/"+folder);
+           logger.info("dir "+dir);
            try{
                uploadResponse = amazonClient.batchUploadFiles(files,dir);
 

@@ -45,8 +45,8 @@ public class clientController {
 
     @PostMapping("/upload")
     public DeferredResult<String> upload(@RequestParam("files")MultipartFile[] files,
-                                         @RequestParam("path") String path,
-                                         @RequestParam("folder") String folder,
+                                         @RequestParam("path") String path, // relative path
+                                         @RequestParam("folder") String folder, // upload as a folder or not
                                          RedirectAttributes attributes){
         String placeOrder = "UPLOAD" + utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
         actionsQueue.setUploadOrder(placeOrder,files,path,folder,attributes);
