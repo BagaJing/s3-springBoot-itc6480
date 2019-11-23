@@ -100,7 +100,7 @@ public class bucketController {
                              @RequestParam(value = "newName") String newName){
         logger.info("Main thread receive file rename task");
         String order = "RFI"+utils.getRandomOrderNum(DEFALUT_ORDER_LENGTH);
-        myQueue.setRenameFileOrder(order,oldName,newName);
+       // myQueue.setRenameFileOrder(order,oldName,newName);
         DeferredResult<String> result = new DeferredResult<String>();
         resultHolder.getMap().put(order,result);
         logger.info("Main Thread release");

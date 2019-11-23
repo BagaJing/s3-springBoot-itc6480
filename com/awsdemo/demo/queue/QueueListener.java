@@ -48,11 +48,10 @@ public class QueueListener implements ApplicationListener<ContextRefreshedEvent>
                 if (!theQueue.getQueue().isEmpty()) {
                     String orderNumber = theQueue.getQueue().poll();
                     String orderType = "";
-                    if (orderNumber.startsWith("UP")) orderType = "Upload Order";
-                    if (orderNumber.startsWith("RFO")) orderType = "Rename Folder Order";
-                    if (orderNumber.startsWith("RFI")) orderType = "Rename File Order";
                     if (orderNumber.startsWith("INDEX")) orderType = INDEX;
                     if (orderNumber.startsWith("UPLOAD")) orderType = RE_UPLOAD;
+                    if (orderNumber.startsWith("DELETE")) orderType = RE_UPLOAD;
+                    if (orderNumber.startsWith("RENAME")) orderType = RE_UPLOAD;
                     logger.info("Retrun Order Status: " + orderNumber);
                     logger.info("Place " + orderType + " Success. Order Number: " + orderNumber);
                     resultHolder.getMap().get(orderNumber).setResult(orderType);

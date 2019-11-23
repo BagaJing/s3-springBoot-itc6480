@@ -105,7 +105,8 @@ public class amazonClientImpl implements amazonClient {
              * parameter 4:List<File> files: a list of files to upload
              */
             String path = folderName;
-            if(dir.length()!=0) path += "/"+dir;
+            path = path + (dir.equals("")? "": dir);
+            logger.info(path);
             MultipleFileUpload upload = transfer.uploadFileList(bucketName,path,new File("."),files);
             //amazonUtils.printProgressBar(0.0);
          /*   do{

@@ -14,6 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ExecutionException;
 
 @Component
 public class actionsQueue {
@@ -23,12 +24,13 @@ public class actionsQueue {
     private String placeOrder;
     private Queue<String> queue = new LinkedList<>();
     @Async("taskAsyncPool")
-    public void setIndexShowOrder(String placeOrder, Model model,String subDir){
+    public void setIndexShowOrder(String placeOrder, Model model,String subDir,String folderName){
         logger.info("PageShow Order Received : "+placeOrder);
         List<String> list = amazonClient.getKeyFromS3Bucket(subDir);
         List<List<String>> res = contentTypeUtils.addTypes(list);
         model.addAttribute("objects",res);
         model.addAttribute("rootDir",subDir.split("/"));
+        model.addAttribute("parent",folderName);
         queue.offer(placeOrder);
     }
     @Async("taskAsyncPool")
@@ -41,9 +43,10 @@ public class actionsQueue {
         queue.offer(placeOrder);
     }
     @Async("taskAsyncPool")
-    public void setUploadOrder(String placeOrder, MultipartFile[] files,String dir,RedirectAttributes attributes){
+    public void setUploadOrder(String placeOrder, MultipartFile[] files,String dir,String folder,RedirectAttributes attributes){
            logger.info("Upload Order Request Received: "+placeOrder);
            String uploadResponse = "";
+           dir = dir + (folder.equals("")? "":"/"+folder);
            try{
                uploadResponse = amazonClient.batchUploadFiles(files,dir);
 
@@ -57,6 +60,43 @@ public class actionsQueue {
            }
     }
 
+    @Async("taskAsyncPool")
+    public void setDeleteOrder(String placeOrder,String path,String root, RedirectAttributes attributes){
+        logger.info("Delete Order Request Received: "+placeOrder);
+        try {
+            amazonClient.deleteFile(path);
+            attributes.addFlashAttribute("dir",root);
+            logger.info("Delete Order Requeste Finished: "+placeOrder);
+        } catch (Exception e){
+            logger.error("Delete File Exception",e);
+        }
+        queue.offer(placeOrder);
+    }
+    @Async("taskAsyncPool")
+    public void setRenameFileOrder(String placeOrder,
+                                   String parent,
+                                   String oldName,
+                                   String newName,
+                                   String root,
+                                   RedirectAttributes attributes){
+            logger.info("Rename File Order Request Recived: "+placeOrder);
+            oldName = parent+"/"+(root.equals("")? "":root+"/")+oldName;
+            newName = parent+"/"+(root.equals("")? "":root+"/")+newName;
+            logger.info(oldName);
+            logger.info(newName);
+            try{
+                 amazonClient.renameFile(oldName,newName);
+                attributes.addFlashAttribute("dir",root);
+            }catch (Exception e){
+                logger.error("Rename process exception",e);
+            }
+
+            queue.offer(placeOrder);
+            logger.info("Rename File Order Request Finished "+placeOrder);
+
+
+
+    }
     public  void setRenameFolderOrder(String placeOrder,String oldName,String newName){
         new Thread(()->{
            logger.info("Rename Folder Order Request Received: "+placeOrder);
@@ -72,23 +112,6 @@ public class actionsQueue {
            }
         }).start();
     }
-
-    public void setRenameFileOrder(String placeOrder,String oldName,String newName){
-        new Thread(()->{
-            logger.info("Rename File Order Request Recived: "+placeOrder);
-            boolean rfiResponse = false;
-            try{
-                rfiResponse = amazonClient.renameFile(oldName,newName);
-            }catch (Exception e){
-                logger.error("Rename process exception",e);
-            }
-            if (rfiResponse){
-                queue.offer(placeOrder);
-                logger.info("Rename File Order Request Finished "+placeOrder);
-            }
-        }).start();
-    }
-
     public Queue<String> getQueue() {
         return queue;
     }

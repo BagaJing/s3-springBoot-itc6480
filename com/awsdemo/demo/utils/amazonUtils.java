@@ -41,7 +41,7 @@ public class amazonUtils {
      * use timestamp to generate it
      */
     private static String generateFileName(MultipartFile file){
-        return new Date().getTime()+"-"+file.getOriginalFilename().replace(" ","_");
+        return file.getOriginalFilename().replace(" ","_");
     }
     public static void printProgressBar(double pct){
         final int bar_size = 40;
