@@ -121,19 +121,17 @@ public class actionsQueue {
                                       String root,
                                       RedirectAttributes attributes){
            logger.info("Rename Folder Order Request Received: "+placeOrder);
-            oldName = (root.equals("")? "":root+"/")+oldName;
-            newName = parent+"/"+(root.equals("")? "":root+"/")+newName;
-            logger.info("RenameFolder Debug oldName "+oldName);
-            logger.info("RenameFolder Debug newBane "+newName);
-            Stack<String> subHolders = new Stack<>();
+            oldName = parent+"/"+(root.equals("")? "":root+"/")+oldName;
+            int level = oldName.split("/").length;
+            logger.info("dir Level test "+level);
            try{
-               //amazonClient.reNameFolder(oldName,newName);
-               subHolders = amazonClient.reNameFolder_stack(oldName,newName);
+               amazonClient.renameFolder_new(oldName,newName,level);
                attributes.addFlashAttribute("dir",root);
            }catch (Exception e){
                logger.error("Rename process exception",e);
            }
-           if (!subHolders.isEmpty()) logger.info(subHolders.toString());
+
+           //if (!subHolders.isEmpty()) logger.info(subHolders.toString());
                queue.offer(placeOrder);
                logger.info("Rename Folder Order Request Finished: "+placeOrder);
 

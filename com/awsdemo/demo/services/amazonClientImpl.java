@@ -328,6 +328,45 @@ public class amazonClientImpl implements amazonClient {
         }
         return subFoldersHolder;
     }
+    @Override
+    public void renameFolder_new(String oldPrefix,String newFolder,int level){
+        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+                                                .withBucketName(bucketName)
+                                                .withPrefix(oldPrefix);
+        ObjectListing objectListing = s3Client.listObjects(listObjectsRequest);
+        String newPrefix = getNewPath(oldPrefix,newFolder,level);
+        try {
+            while (true){
+                for (S3ObjectSummary summary : objectListing.getObjectSummaries()){
+                    String oldPath = summary.getKey();
+                    //copy
+                    String newPath = oldPath.replace(oldPrefix,newPrefix);
+                    CopyObjectRequest copyObjectRequest = new CopyObjectRequest(bucketName,oldPath,bucketName,newPath);
+                    s3Client.copyObject(copyObjectRequest);
+                    //delete
+                    s3Client.deleteObject(bucketName,oldPath);
+
+                }
+                if (objectListing.isTruncated()) {
+                    objectListing = s3Client.listNextBatchOfObjects(objectListing);
+                }
+                else break;
+            }
+        } catch (Exception e){
+            logger.error("Rename Folder Exception",e.getMessage());
+        }
+    }
+    private String getNewPath(String oldPath,String newName,int level){
+        String[] strs= oldPath.split("/");
+        String newPath = "";
+        for (int i = 0 ; i < strs.length ; i++){
+            if (i != level-1)
+                newPath += strs[i]+"/";
+            else
+                newPath += newName+"/";
+        }
+        return  newPath.substring(0,newPath.length()-1);
+    }
 
     @Override
     public void deleteFolder(String prefix) {

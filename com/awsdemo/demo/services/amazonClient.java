@@ -18,6 +18,7 @@ public interface amazonClient {
      ResponseEntity<Resource> download(String fileName) throws IOException;
      void deleteFile(String fileName);
      void deleteFolder(String prefix);
+     void renameFolder_new(String oldPrefix,String newFolder,int level);
      boolean renameFile(String oldName,String newName);
      boolean reNameFolder(String oldFolder,String newFolder);
      Stack<String> reNameFolder_stack(String oldFolder, String newFolder);
