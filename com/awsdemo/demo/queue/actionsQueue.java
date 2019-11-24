@@ -14,6 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 
 @Component
@@ -76,6 +77,18 @@ public class actionsQueue {
         queue.offer(placeOrder);
     }
     @Async("taskAsyncPool")
+    public void setDelteFolderOrder(String placeOrder,String prefix,String root,RedirectAttributes attributes){
+        logger.info("Delte Folder Order Received: "+placeOrder);
+        try {
+            amazonClient.deleteFolder(prefix);
+            attributes.addFlashAttribute("dir",root);
+            logger.info("Delete ORder Request Finished: "+placeOrder);
+        }catch (Exception e){
+            logger.error("Delete Folder Exception",e.getMessage());
+        }
+        queue.offer(placeOrder);
+    }
+    @Async("taskAsyncPool")
     public void setRenameFileOrder(String placeOrder,
                                    String parent,
                                    String oldName,
@@ -112,12 +125,15 @@ public class actionsQueue {
             newName = parent+"/"+(root.equals("")? "":root+"/")+newName;
             logger.info("RenameFolder Debug oldName "+oldName);
             logger.info("RenameFolder Debug newBane "+newName);
+            Stack<String> subHolders = new Stack<>();
            try{
-               amazonClient.reNameFolder(oldName,newName);
+               //amazonClient.reNameFolder(oldName,newName);
+               subHolders = amazonClient.reNameFolder_stack(oldName,newName);
                attributes.addFlashAttribute("dir",root);
            }catch (Exception e){
                logger.error("Rename process exception",e);
            }
+           if (!subHolders.isEmpty()) logger.info(subHolders.toString());
                queue.offer(placeOrder);
                logger.info("Rename Folder Order Request Finished: "+placeOrder);
 

@@ -17,7 +17,9 @@ public interface amazonClient {
      List<String> getKeyFromS3Bucket(String subDir);
      ResponseEntity<Resource> download(String fileName) throws IOException;
      void deleteFile(String fileName);
+     void deleteFolder(String prefix);
      boolean renameFile(String oldName,String newName);
      boolean reNameFolder(String oldFolder,String newFolder);
      Stack<String> reNameFolder_stack(String oldFolder, String newFolder);
+
 }

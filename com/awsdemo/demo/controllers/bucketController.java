@@ -106,4 +106,10 @@ public class bucketController {
         logger.info("Main Thread release");
         return result;
     }
+    @PostMapping("/deleteFolder")
+    public String delteFolder(@RequestParam(value = "prefix") String prefix){
+        if (prefix.equals("")) return "No prefix caught";
+        amazonClient.deleteFolder(prefix);
+        return "deleted";
+    }
 }

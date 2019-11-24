@@ -308,6 +308,10 @@ public class amazonClientImpl implements amazonClient {
             //System.out.println(nameList);
             List<CopyObjectRequest> copyRequests = new LinkedList<>();
             for (String name : nameList) {
+                if (!name.contains(".")) {
+                    subFoldersHolder.push(name);
+                    continue;
+                }
                 String newName = newFolder+name.substring(name.lastIndexOf("/"));
                 logger.info(newName);
                 CopyObjectRequest copyObjectRequest = new CopyObjectRequest(bucketName, name, bucketName, newName);
@@ -323,6 +327,29 @@ public class amazonClientImpl implements amazonClient {
             e.printStackTrace();
         }
         return subFoldersHolder;
+    }
+
+    @Override
+    public void deleteFolder(String prefix) {
+        prefix = folderName+"/"+prefix+"/"; //add a slash at last to prevent same level folders have same prefix be delted
+        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+                                                .withBucketName(bucketName)
+                                                .withPrefix(prefix);
+
+        ObjectListing objectListing = s3Client.listObjects(listObjectsRequest);
+        try {
+            while (true){
+                for (S3ObjectSummary summary : objectListing.getObjectSummaries()) {
+                    logger.info(summary.getKey());
+                    s3Client.deleteObject(bucketName, summary.getKey());
+                }
+                if (objectListing.isTruncated())
+                    objectListing = s3Client.listNextBatchOfObjects(objectListing);
+                else break;
+            }
+        } catch (Exception e){
+            logger.error("deleteFolder Exception",e.getMessage());
+        }
     }
 }
 

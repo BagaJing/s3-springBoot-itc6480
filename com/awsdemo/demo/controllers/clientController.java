@@ -74,6 +74,16 @@ public class clientController {
         resultHolder.getMap().put(placeOrder,result);
         return result;
     }
+    @PostMapping("/deleteFolder")
+    public DeferredResult<String> rename_folder(@RequestParam("prefix") String prefix,
+                                                @RequestParam("root") String root,
+                                                RedirectAttributes attributes){
+        String placeOrder = "DELETE"+utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
+        actionsQueue.setDelteFolderOrder(placeOrder,prefix,root,attributes);
+        DeferredResult<String> result = new DeferredResult<>();
+        resultHolder.getMap().put(placeOrder,result);
+        return  result;
+    }
     @PostMapping("/renameFile")
     public  DeferredResult<String> rename_file(@RequestParam("oldName") String oldName,
                                                @RequestParam("root") String root,
@@ -85,6 +95,7 @@ public class clientController {
         resultHolder.getMap().put(placeOrder,result);
         return result;
     }
+
     @PostMapping("/renameFolder")
     public DeferredResult<String> rename_folder(@RequestParam("oldName") String oldName,
                                                 @RequestParam("root") String root,
