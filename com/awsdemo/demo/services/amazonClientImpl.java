@@ -8,11 +8,13 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.awsdemo.demo.utils.amazonUtils;
 import com.awsdemo.demo.utils.contentTypeUtils;
+import com.awsdemo.demo.utils.zipUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -252,6 +254,61 @@ public class amazonClientImpl implements amazonClient {
      * Parameter 1 : bucketName, Parameter 2: fileName
      * */
     @Override
+    public ResponseEntity<Resource> downloadFolder(String path) throws IOException {
+        TransferManager transfer = TransferManagerBuilder.standard().withS3Client(s3Client).build();
+        if (path.endsWith("/")) path = path.substring(0,path.length()-1);
+        String dirName = path.substring(path.indexOf("/"));
+        try {
+            MultipleFileDownload  multipleFiles=transfer.downloadDirectory(bucketName,path,new File("."));
+            while (true){
+                if (multipleFiles.isDone()) break;
+            }
+        } catch (AmazonS3Exception e){
+            logger.error("download Folder Exception",e);
+        }
+        String sourceDir = folderName;
+        zipUtils.folderToZip(sourceDir,new FileOutputStream(new File(sourceDir+".zip")));
+        //logger.info("download Folder exists or not :"+ new File(sourceDir).exists());
+        //logger.info("zip outcome exists or not: "+new File(sourceDir+".zip").exists());
+        File zipFile = new File(sourceDir+".zip");
+        if (zipFile.exists()){
+          logger.info("zip process finished, start to delete source folders");
+          File file = new File(sourceDir);
+          if(file.exists()){
+              logger.info("start to delete");
+              while (true){
+                  if (deleteDir(file)) break;
+              }
+          }
+          InputStream in = new FileInputStream(zipFile);
+          return toResponseEntity(in,".zip");
+        }
+        return null;
+    }
+    private static ResponseEntity<Resource> toResponseEntity(InputStream in,String suffix) throws IOException{
+        InputStreamResource resource = new InputStreamResource(in);
+        HttpHeaders headers = new HttpHeaders();
+        String content_type = contentTypeUtils.toCotentType(suffix);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=file"+suffix);
+        headers.add("Cache-Control","no-cahce,no-store,must-revalidate");
+        headers.add("Pargma","no-cache");
+        headers.add("Expires","0");
+        return  ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(content_type))
+                .body(resource);
+    }
+    private static boolean deleteDir(File dir){
+        if (dir.isDirectory()){
+            String[] children = dir.list();
+            for (int i = 0 ; i < children.length ; i++){
+                boolean success = deleteDir(new File(dir,children[i]));
+                if (!success) return false;
+            }
+        }
+        return dir.delete();
+    }
+    @Override
     public void deleteFile(String fileName){
         s3Client.deleteObject(new DeleteObjectRequest(bucketName,fileName));
     }
@@ -272,64 +329,7 @@ public class amazonClientImpl implements amazonClient {
     }
 
     @Override
-    public boolean reNameFolder(String oldFolder, String newFolder) {
-        boolean res = false;
-        logger.info("refolder function called");
-        Stack<String> subFoldersHolder = new Stack<>(); //load the path of sub folders
-        try {
-            List<String> nameList = getKeyFromS3Bucket(oldFolder);
-            //System.out.println(nameList);
-            List<CopyObjectRequest> copyRequests = new LinkedList<>();
-            for (String name : nameList) {
-                String newName = newFolder+name.substring(name.lastIndexOf("/"));
-                logger.info(newName);
-                CopyObjectRequest copyObjectRequest = new CopyObjectRequest(bucketName, name, bucketName, newName);
-                copyRequests.add(copyObjectRequest);
-            }
-            for (CopyObjectRequest request : copyRequests) {
-                s3Client.copyObject(request);
-            }
-            for (String oldFile : nameList) {
-                deleteFile(oldFile);
-            }
-            res = true;
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        return res;
-    }
-
-    @Override
-    public Stack<String> reNameFolder_stack(String oldFolder, String newFolder) {
-        logger.info("refolder function called");
-        Stack<String> subFoldersHolder = new Stack<>(); //load the path of sub folders
-        try {
-            List<String> nameList = getKeyFromS3Bucket(oldFolder);
-            //System.out.println(nameList);
-            List<CopyObjectRequest> copyRequests = new LinkedList<>();
-            for (String name : nameList) {
-                if (!name.contains(".")) {
-                    subFoldersHolder.push(name);
-                    continue;
-                }
-                String newName = newFolder+name.substring(name.lastIndexOf("/"));
-                logger.info(newName);
-                CopyObjectRequest copyObjectRequest = new CopyObjectRequest(bucketName, name, bucketName, newName);
-                copyRequests.add(copyObjectRequest);
-            }
-            for (CopyObjectRequest request : copyRequests) {
-                s3Client.copyObject(request);
-            }
-            for (String oldFile : nameList) {
-                deleteFile(oldFile);
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        return subFoldersHolder;
-    }
-    @Override
-    public void renameFolder_new(String oldPrefix,String newFolder,int level){
+    public void renameFolder(String oldPrefix,String newFolder,int level){
         ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                                                 .withBucketName(bucketName)
                                                 .withPrefix(oldPrefix);

@@ -2,11 +2,15 @@ package com.awsdemo.demo.controllers;
 
 import com.awsdemo.demo.queue.DeferredResultHolder;
 import com.awsdemo.demo.queue.actionsQueue;
+import com.awsdemo.demo.services.amazonClient;
 import com.awsdemo.demo.utils.utils;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,12 +18,18 @@ import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 
 @Controller
 @RequestMapping("/client")
 public class clientController {
     private final static int DEFAULT_ORDER_LENTGH = 8;
     private Logger logger = LoggerFactory.getLogger(getClass());
+    @Autowired
+    private com.awsdemo.demo.services.amazonClient amazonClient;
     @Autowired
     private actionsQueue actionsQueue;
     @Autowired
@@ -106,5 +116,20 @@ public class clientController {
         DeferredResult<String> result = new DeferredResult<>();
         resultHolder.getMap().put(placeOrder,result);
         return result;
+    }
+    @GetMapping("/download")
+    public ResponseEntity<Resource> download(@RequestParam("name") String name,
+                                             @RequestParam("root") String root) throws IOException {
+        String path = folderName+"/"+(root.equals("")? "":root+"/")+name;
+        return amazonClient.download(path);
+    }
+    @GetMapping("/downloadFolder")
+    public ResponseEntity<Resource> downloadFolders(@RequestParam("name") String name,
+                                @RequestParam("root") String root) throws IOException {
+        String path = folderName+"/"+(root.equals("")? "":root+"/")+name;
+        ResponseEntity<Resource> res = amazonClient.downloadFolder(path);
+        File file = new File(folderName+".zip");
+        if (file.exists()) file.delete();
+        return res;
     }
 }

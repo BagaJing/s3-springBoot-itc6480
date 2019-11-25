@@ -125,7 +125,7 @@ public class actionsQueue {
             int level = oldName.split("/").length;
             logger.info("dir Level test "+level);
            try{
-               amazonClient.renameFolder_new(oldName,newName,level);
+               amazonClient.renameFolder(oldName,newName,level);
                attributes.addFlashAttribute("dir",root);
            }catch (Exception e){
                logger.error("Rename process exception",e);
