@@ -237,17 +237,15 @@ public class amazonClientImpl implements amazonClient {
         String suffix = fileName.substring(fileName.lastIndexOf("."));
         //System.out.println(suffix);
         InputStream in = fullObject.getObjectContent();
-        InputStreamResource resource = new InputStreamResource(in);
-        HttpHeaders headers = new HttpHeaders();
-        String content_type = contentTypeUtils.toCotentType(suffix);
-        headers.add(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=file"+suffix);
-        headers.add("Cache-Control","no-cahce,no-store,must-revalidate");
-        headers.add("Pargma","no-cache");
-        headers.add("Expires","0");
-        return  ResponseEntity.ok()
-                .headers(headers)
-                .contentType(MediaType.parseMediaType(content_type))
-                .body(resource);
+        return toResponseEntity(in,getFileName(fileName),suffix);
+    }
+    private String getFileName(String fileName){
+        int index = fileName.lastIndexOf("/");
+        if (index == -1) index = fileName.indexOf("/");
+        if (index == -1) return "default";
+        String res = fileName.substring(index+1);
+        res = res.substring(0,res.indexOf("."));
+        return  res;
     }
     /*
      * Delete the file from the bucket
@@ -257,16 +255,17 @@ public class amazonClientImpl implements amazonClient {
     public ResponseEntity<Resource> downloadFolder(String path) throws IOException {
         TransferManager transfer = TransferManagerBuilder.standard().withS3Client(s3Client).build();
         if (path.endsWith("/")) path = path.substring(0,path.length()-1);
-        String dirName = path.substring(path.indexOf("/"));
+        String dirName = path.substring(path.indexOf("/")+1);
+        //logger.info("downloadFolder test: dir "+dirName);
         try {
-            MultipleFileDownload  multipleFiles=transfer.downloadDirectory(bucketName,path,new File("."));
+            MultipleFileDownload  multipleFiles=transfer.downloadDirectory(bucketName,path,new File(dirName),true);
             while (true){
                 if (multipleFiles.isDone()) break;
             }
         } catch (AmazonS3Exception e){
-            logger.error("download Folder Exception",e);
+            logger.error("download Folder Exception from AmazonClientImpl",e);
         }
-        String sourceDir = folderName;
+        String sourceDir = dirName;
         zipUtils.folderToZip(sourceDir,new FileOutputStream(new File(sourceDir+".zip")));
         //logger.info("download Folder exists or not :"+ new File(sourceDir).exists());
         //logger.info("zip outcome exists or not: "+new File(sourceDir+".zip").exists());
@@ -281,15 +280,17 @@ public class amazonClientImpl implements amazonClient {
               }
           }
           InputStream in = new FileInputStream(zipFile);
-          return toResponseEntity(in,".zip");
+          ResponseEntity<Resource> res = toResponseEntity(in,sourceDir,".zip");
+          zipFile.delete();
+          return res;
         }
         return null;
     }
-    private static ResponseEntity<Resource> toResponseEntity(InputStream in,String suffix) throws IOException{
+    private static ResponseEntity<Resource> toResponseEntity(InputStream in,String name,String suffix) throws IOException{
         InputStreamResource resource = new InputStreamResource(in);
         HttpHeaders headers = new HttpHeaders();
         String content_type = contentTypeUtils.toCotentType(suffix);
-        headers.add(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=file"+suffix);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename="+name+suffix);
         headers.add("Cache-Control","no-cahce,no-store,must-revalidate");
         headers.add("Pargma","no-cache");
         headers.add("Expires","0");

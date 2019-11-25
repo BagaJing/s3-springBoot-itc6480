@@ -1,5 +1,7 @@
 package com.awsdemo.demo.controllers;
 
+import com.awsdemo.demo.downloadQueue.DeferredResponseHolder;
+import com.awsdemo.demo.downloadQueue.downLoadsQueue;
 import com.awsdemo.demo.queue.DeferredResultHolder;
 import com.awsdemo.demo.queue.actionsQueue;
 import com.awsdemo.demo.services.amazonClient;
@@ -117,19 +119,28 @@ public class clientController {
         resultHolder.getMap().put(placeOrder,result);
         return result;
     }
+    @Autowired
+    private downLoadsQueue downQueue;
+    @Autowired
+    private DeferredResponseHolder responseHolder;
     @GetMapping("/download")
-    public ResponseEntity<Resource> download(@RequestParam("name") String name,
+    public DeferredResult<ResponseEntity<Resource>> download(@RequestParam("name") String name,
                                              @RequestParam("root") String root) throws IOException {
+        String order = "DOWN"+utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
+        DeferredResult<ResponseEntity<Resource>> result = new DeferredResult<>();
+        responseHolder.getResourceMap().put(order,result);
         String path = folderName+"/"+(root.equals("")? "":root+"/")+name;
-        return amazonClient.download(path);
+        downQueue.setDownloadFileOrder(order,path);
+        return result;
     }
     @GetMapping("/downloadFolder")
-    public ResponseEntity<Resource> downloadFolders(@RequestParam("name") String name,
+    public DeferredResult<ResponseEntity<Resource>> downloadFolders(@RequestParam("name") String name,
                                 @RequestParam("root") String root) throws IOException {
+        String order = "DOWN"+utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
+        DeferredResult<ResponseEntity<Resource>> result = new DeferredResult<>();
+        responseHolder.getResourceMap().put(order,result);
         String path = folderName+"/"+(root.equals("")? "":root+"/")+name;
-        ResponseEntity<Resource> res = amazonClient.downloadFolder(path);
-        File file = new File(folderName+".zip");
-        if (file.exists()) file.delete();
-        return res;
+        downQueue.setDownloadFolderOrder(order,path);
+        return result;
     }
 }
