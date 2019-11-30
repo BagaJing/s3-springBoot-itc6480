@@ -4,12 +4,7 @@ import com.awsdemo.demo.downloadQueue.DeferredResponseHolder;
 import com.awsdemo.demo.downloadQueue.downLoadsQueue;
 import com.awsdemo.demo.queue.DeferredResultHolder;
 import com.awsdemo.demo.queue.actionsQueue;
-import com.awsdemo.demo.services.amazonClient;
-import com.awsdemo.demo.utils.contentTypeUtils;
 import com.awsdemo.demo.utils.utils;
-import org.springframework.context.annotation.Import;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,22 +17,16 @@ import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
-
-
+@RequestMapping("/dev")
 @Controller
-@RequestMapping("/client")
-@Import({actionsQueue.class,DeferredResponseHolder.class,downLoadsQueue.class,DeferredResultHolder.class})
-public class clientController {
+public class devController {
     private final static int DEFAULT_ORDER_LENTGH = 8;
     private Logger logger = LoggerFactory.getLogger(getClass());
-   // @Autowired
+    // @Autowired
     //private com.awsdemo.demo.services.amazonClient amazonClient;
     @Autowired
-    private actionsQueue actionsQueue;
+    private com.awsdemo.demo.queue.actionsQueue actionsQueue;
     @Autowired
     private DeferredResultHolder resultHolder;
     @Autowired
@@ -56,7 +45,7 @@ public class clientController {
         actionsQueue.setIndexShowOrder(placeOrder,model,"",folderName);
         DeferredResult<String> result = new DeferredResult<>();
         resultHolder.getMap().put(placeOrder,result);
-       // return "index-dev";
+        // return "index-dev";
         return "index-dev";
     }
     /*
@@ -75,7 +64,7 @@ public class clientController {
         DeferredResult<String> result = new DeferredResult<>();
         resultHolder.getMap().put(placeOrder,result);
         //return "index-dev";
-       return "index";
+        return "index-dev";
     }
     /*
     public DeferredResult<String> gotoNext(@RequestParam("subDir") String subDir, Model model){
@@ -89,33 +78,40 @@ public class clientController {
      */
 
     @PostMapping("/upload")
+    /*
     public String upload(@RequestParam("folder") String folder,// upload as a folder or not
                          @RequestParam("path") String path, // relative path
-                         @RequestParam("files")MultipartFile[] files,
+                         @RequestParam("files") MultipartFile[] files,
                          RedirectAttributes attributes){
         String placeOrder = "UPLOAD" + utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
         actionsQueue.setUploadOrder(placeOrder,files,path,folder,attributes);
         return "redirect:/client/upload";
     }
-        /*
-    public DeferredResult<String> upload(@RequestParam("files")MultipartFile[] files,
-                                         @RequestParam("path") String path, // relative path
-                                         @RequestParam("folder") String folder, // upload as a folder or not
-                                         RedirectAttributes attributes){
-        String placeOrder = "UPLOAD" + utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
-        actionsQueue.setUploadOrder(placeOrder,files,path,folder,attributes);
-        DeferredResult<String> result = new DeferredResult<>();
-        resultHolder.getMap().put(placeOrder,result);
-        return result;
-    }
-         */
+
+     */
+
+public DeferredResult<String> upload(@RequestParam("files")MultipartFile[] files,
+                                     @RequestParam("path") String path, // relative path
+                                     @RequestParam("folder") String folder, // upload as a folder or not
+                                     RedirectAttributes attributes){
+    String placeOrder = "UPLOAD" + utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
+    logger.info("Test path value "+path);
+    logger.info("Test folder value "+folder);
+    actionsQueue.setUploadOrder(placeOrder,files,path,folder,attributes);
+    DeferredResult<String> result = new DeferredResult<>();
+    resultHolder.getMap().put(placeOrder,result);
+    return result;
+}
     @GetMapping("/upload")
-    public String upload_redirect(@ModelAttribute("dir") String subDir,Model model){
+    /*
+    public String upload_redirect(@ModelAttribute("dir") String subDir, Model model){
         String placeOrder = "INDEX" + utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
         actionsQueue.setIndexShowOrder(placeOrder,model,subDir,folderName);
         return "index-dev";
     }
-    /*
+
+     */
+
     public DeferredResult<String> upload_redirect(@ModelAttribute("dir") String subDir,Model model){
         String placeOrder = "INDEX" + utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
         actionsQueue.setIndexShowOrder(placeOrder,model,subDir,folderName);
@@ -124,7 +120,6 @@ public class clientController {
         return result;
     }
 
-     */
     @PostMapping("/delete")
     public DeferredResult<String> delete_file(@RequestParam("path") String path,
                                               @RequestParam("root") String root,
@@ -172,7 +167,7 @@ public class clientController {
     }
     @GetMapping("/download")
     public ResponseEntity<byte[]> download(@RequestParam("name") String name,
-                                             @RequestParam("root") String root) throws IOException{
+                                           @RequestParam("root") String root) throws IOException {
         String order = "DOWN"+utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
         String path = folderName+"/"+(root.equals("")? "":root+"/")+name;
         return downQueue.setDownloadFileOrder(order,path);
@@ -191,7 +186,7 @@ public class clientController {
      */
     @GetMapping("/downloadfolder")
     public ResponseEntity<byte[]> downloadFolders(@RequestParam("name") String name,
-                                                    @RequestParam("root") String root) throws IOException{
+                                                  @RequestParam("root") String root) throws IOException{
         String order = "DOWN"+utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
         String path = folderName+"/"+(root.equals("")? "":root+"/")+name;
         return downQueue.setDownloadFolderOrder(order,path);

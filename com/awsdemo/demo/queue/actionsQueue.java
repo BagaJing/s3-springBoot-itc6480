@@ -5,6 +5,7 @@ import com.awsdemo.demo.utils.contentTypeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
@@ -18,13 +19,14 @@ import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 
 @Component
+//@Import({amazonClient.class})
 public class actionsQueue {
     @Autowired
     private amazonClient amazonClient;
     private Logger logger = LoggerFactory.getLogger(getClass());
     private String placeOrder;
     private Queue<String> queue = new LinkedList<>();
-    @Async("taskAsyncPool")
+    //@Async("taskAsyncPool")
     public void setIndexShowOrder(String placeOrder, Model model,String subDir,String folderName){
         logger.info("PageShow Order Received : "+placeOrder);
         List<String> list = amazonClient.getKeyFromS3Bucket(subDir);
@@ -57,11 +59,9 @@ public class actionsQueue {
            }catch (Exception e){
                e.printStackTrace();
            }
-           if (uploadResponse.equals("Completed")){
                attributes.addFlashAttribute("dir",returnDir);
                queue.offer(placeOrder);
                logger.info("Upload Order Request Finished: "+placeOrder);
-           }
     }
 
     @Async("taskAsyncPool")

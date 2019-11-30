@@ -8,10 +8,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
-import com.amazonaws.services.s3.transfer.MultipleFileDownload;
-import com.amazonaws.services.s3.transfer.MultipleFileUpload;
-import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.amazonaws.services.s3.transfer.*;
 import com.awsdemo.demo.utils.amazonUtils;
 import com.awsdemo.demo.utils.contentTypeUtils;
 import com.awsdemo.demo.utils.zipUtils;
@@ -91,8 +88,7 @@ public class amazonClientImpl implements amazonClient {
      * use TransferManager.uploadFileList to upload multiple files
      * */
 
-    private String batchUploadToS3Bucket(List<File> files,String dir) throws InterruptedException {
-        //System.out.println("i am the upload function, i am using Thread: "+Thread.currentThread().getName()+" Current Time "+System.currentTimeMillis());
+    public String batchUploadToS3Bucket(List<File> files,String dir) {
         if (files.size()==0) return "no files found to upload";
         String response = "";
         TransferManager transfer = TransferManagerBuilder.standard().withS3Client(s3Client).build();
@@ -104,13 +100,17 @@ public class amazonClientImpl implements amazonClient {
              * parameter 3:File direcotry: the common parent directory of files to upload, use new File(".") to upload without a common directory
              * parameter 4:List<File> files: a list of files to upload
              */
+            ObjectCannedAclProvider aclProvider = new ObjectCannedAclProvider() {
+                @Override
+                public CannedAccessControlList provideObjectCannedAcl(File file) {
+                    return CannedAccessControlList.Private;
+                }
+            };
             String path = folderName;
             // path: rootFolder Name dir: relative path
             path = path + (dir.equals("")? "":dir);
-            logger.info("path "+path);
-            MultipleFileUpload upload = transfer.uploadFileList(bucketName,path,new File("."),files);
-            //amazonUtils.printProgressBar(0.0);
-         /*   do{
+            MultipleFileUpload upload = transfer.uploadFileList(bucketName,path,new File("."),files,null,null,aclProvider);
+            do{
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e){
@@ -120,34 +120,11 @@ public class amazonClientImpl implements amazonClient {
                 double pct = progress.getPercentTransferred();
                 amazonUtils.eraseProgressBar();
                 amazonUtils.printProgressBar(pct);
-            }while (!upload.isDone());*/
-            while (true){
-                if (upload.isDone()){
-                    response = upload.getState().toString();
-                    break;
-                }
-            }
-
+            }while (!upload.isDone());
+            response = upload.getState().toString();
             /*upload succeed, delete local files*/
-
             for (File file : files){
                 file.delete();
-            }
-        } catch (Exception e){
-            response = e.getMessage();
-        }
-        return response;
-    }
-    private String uploadAsDirToS3(File dir){
-        String response = "";
-        TransferManager transfer = TransferManagerBuilder.standard().withS3Client(s3Client).build();
-        try {
-            MultipleFileUpload upload = transfer.uploadDirectory(bucketName,folderName,dir,false);
-            while (true){
-                if (upload.isDone()){
-                    response = upload.getState().toString();
-                    break;
-                }
             }
         } catch (Exception e){
             response = e.getMessage();
@@ -232,7 +209,7 @@ public class amazonClientImpl implements amazonClient {
      * Parameter : fileName
      * */
     @Override
-    public ResponseEntity<Resource> download(String fileName) throws IOException {
+    public ResponseEntity<byte[]> download(String fileName) throws IOException {
         S3Object fullObject = s3Client.getObject(new GetObjectRequest(bucketName,fileName));
         String suffix = fileName.substring(fileName.lastIndexOf("."));
         //System.out.println(suffix);
@@ -252,16 +229,18 @@ public class amazonClientImpl implements amazonClient {
      * Parameter 1 : bucketName, Parameter 2: fileName
      * */
     @Override
-    public ResponseEntity<Resource> downloadFolder(String path) throws IOException {
+    public ResponseEntity<byte[]> downloadFolder(String path) throws IOException {
         TransferManager transfer = TransferManagerBuilder.standard().withS3Client(s3Client).build();
         if (path.endsWith("/")) path = path.substring(0,path.length()-1);
         String dirName = path.substring(path.indexOf("/")+1);
+        File parent = new File(dirName);
         //logger.info("downloadFolder test: dir "+dirName);
         try {
-            MultipleFileDownload  multipleFiles=transfer.downloadDirectory(bucketName,path,new File(dirName),true);
+            MultipleFileDownload  multipleFiles=transfer.downloadDirectory(bucketName,path,parent,true);
             while (true){
                 if (multipleFiles.isDone()) break;
             }
+            logger.info("Folder Download Completed");
         } catch (AmazonS3Exception e){
             logger.error("download Folder Exception from AmazonClientImpl",e);
         }
@@ -280,14 +259,21 @@ public class amazonClientImpl implements amazonClient {
               }
           }
           InputStream in = new FileInputStream(zipFile);
-          ResponseEntity<Resource> res = toResponseEntity(in,sourceDir,".zip");
+          ResponseEntity<byte[]> res = toResponseEntity(in,sourceDir,".zip");
           zipFile.delete();
           return res;
         }
         return null;
     }
-    private static ResponseEntity<Resource> toResponseEntity(InputStream in,String name,String suffix) throws IOException{
+    private static ResponseEntity<byte[]> toResponseEntity(InputStream in,String name,String suffix) throws IOException{
         InputStreamResource resource = new InputStreamResource(in);
+        ByteArrayOutputStream swapStream = new ByteArrayOutputStream();
+        byte[] buff = new byte[1024];
+        int len = 0;
+        while ((len = in.read(buff, 0, 100)) > 0) {
+            swapStream.write(buff, 0, len);
+        }
+        byte[] body = swapStream.toByteArray();
         HttpHeaders headers = new HttpHeaders();
         String content_type = contentTypeUtils.toCotentType(suffix);
         headers.add(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename="+name+suffix);
@@ -297,7 +283,7 @@ public class amazonClientImpl implements amazonClient {
         return  ResponseEntity.ok()
                 .headers(headers)
                 .contentType(MediaType.parseMediaType(content_type))
-                .body(resource);
+                .body(body);
     }
     private static boolean deleteDir(File dir){
         if (dir.isDirectory()){

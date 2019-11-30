@@ -4,21 +4,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
+@Import({actionsQueue.class,DeferredResultHolder.class})
 public class QueueListener implements ApplicationListener<ContextRefreshedEvent> {
     @Autowired
     private actionsQueue theQueue;
     @Autowired
     private DeferredResultHolder resultHolder;
     private Logger logger = LoggerFactory.getLogger(getClass());
-    private static String INDEX = "index";
-    private static String RE_INDEX = "redirect:/client/index";
-    private static String RE_UPLOAD = "redirect:/client/upload";
-    private static String TEST = "redirect:/client/test";
+    private static String INDEX = "index-dev";
+    private static String RE_INDEX = "redirect:/dev/index";
+    private static String RE_UPLOAD = "redirect:/dev/upload";
+    private static String TEST = "redirect:/dev/test";
     @Override
     @Async("taskAsyncPool")
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {

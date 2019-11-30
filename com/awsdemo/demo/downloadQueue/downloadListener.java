@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 import java.util.AbstractMap;
 
 @Component
+@Import({downLoadsQueue.class,DeferredResponseHolder.class})
 public class downloadListener implements ApplicationListener<ContextRefreshedEvent> {
     @Autowired
     private downLoadsQueue queue;
