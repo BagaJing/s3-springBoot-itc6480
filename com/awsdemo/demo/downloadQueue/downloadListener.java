@@ -27,7 +27,7 @@ public class downloadListener implements ApplicationListener<ContextRefreshedEve
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
         while (true){
             if (!queue.getQueue().isEmpty()){
-                AbstractMap.SimpleEntry<String, ResponseEntity<Resource>> entry = queue.getQueue().poll();
+                AbstractMap.SimpleEntry<String, ResponseEntity<byte[]>> entry = queue.getQueue().poll();
                 String orderId = entry.getKey();
                 logger.info("Download Order "+orderId+" finished. Start to deliver");
                 responseHolder.getResourceMap().get(orderId).setResult(entry.getValue());

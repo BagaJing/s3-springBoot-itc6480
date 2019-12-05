@@ -9,9 +9,11 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.transfer.*;
+import com.awsdemo.demo.domain.Customer;
 import com.awsdemo.demo.utils.amazonUtils;
 import com.awsdemo.demo.utils.contentTypeUtils;
 import com.awsdemo.demo.utils.zipUtils;
+import org.hibernate.SessionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +24,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
@@ -29,6 +33,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 @Service
 public class amazonClientImpl implements amazonClient {
@@ -44,15 +50,13 @@ public class amazonClientImpl implements amazonClient {
     private String accessKey;
     @Value("${amazonProperties.secretKey}")
     private String secretKey;
-    @Value("${amazonProperties.folderName}")
-    private String folderName;
     private Logger logger = LoggerFactory.getLogger(getClass());
     /*
      * innitializeAmazon(): set amazon credentials to amazon client
      * PostCOnstruct run the method after the construcor is called
      */
     @PostConstruct
-    private  void initializeAmazon(){
+    public void initializeAmazon() throws Exception {
         AWSCredentials credentials = new BasicAWSCredentials(this.accessKey,this.secretKey);
         AWSCredentialsProvider credentialsProvider = new AWSCredentialsProvider() {
             @Override
@@ -88,7 +92,7 @@ public class amazonClientImpl implements amazonClient {
      * use TransferManager.uploadFileList to upload multiple files
      * */
 
-    public String batchUploadToS3Bucket(List<File> files,String dir) {
+    private String batchUploadToS3Bucket(List<File> files,String dir,String folderName) {
         if (files.size()==0) return "no files found to upload";
         String response = "";
         TransferManager transfer = TransferManagerBuilder.standard().withS3Client(s3Client).build();
@@ -137,7 +141,7 @@ public class amazonClientImpl implements amazonClient {
      * return the etag
      */
     @Override
-    public String uploadFile(MultipartFile multipartFile){
+    public String uploadFile(MultipartFile multipartFile,String folderName){
         String response = "";
         try{
             //1.convert multipartFile into File, which the aws requires
@@ -160,7 +164,7 @@ public class amazonClientImpl implements amazonClient {
      */
     @Override
    // @Transactional
-    public String batchUploadFiles(MultipartFile[] files,String dir){
+    public String batchUploadFiles(MultipartFile[] files,String dir,String folderName){
       //  System.out.println("Hi Controller. THis is S3cilent. I am using Thread "+Thread.currentThread().getName()+" I will upload the files");
         String response = "";
         //   System.out.println("length: "+files.length);
@@ -170,7 +174,7 @@ public class amazonClientImpl implements amazonClient {
                 convertedFiles.add(amazonUtils.convertMultiPartFile(files[i]));
             }
             //  System.out.println("size: "+convertedFiles.size());
-           response = batchUploadToS3Bucket(convertedFiles,dir);
+           response = batchUploadToS3Bucket(convertedFiles,dir,folderName);
         } catch (Exception e){
             response = e.getMessage();
             e.printStackTrace();
@@ -182,7 +186,7 @@ public class amazonClientImpl implements amazonClient {
      * Parameter 1 : bucketName, Parameter 2: fileName
      * */
     @Override
-    public List<String> getKeyFromS3Bucket(String subDir){
+    public List<String> getKeyFromS3Bucket(String subDir,String folderName){
         List<String> result = new ArrayList<>();
         String path = folderName;
         if(subDir.length()!=0) path += "/"+subDir+"/";
@@ -356,7 +360,7 @@ public class amazonClientImpl implements amazonClient {
     }
 
     @Override
-    public void deleteFolder(String prefix) {
+    public void deleteFolder(String prefix,String folderName) {
         prefix = folderName+"/"+prefix+"/"; //add a slash at last to prevent same level folders have same prefix be delted
         ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                                                 .withBucketName(bucketName)
@@ -376,6 +380,23 @@ public class amazonClientImpl implements amazonClient {
         } catch (Exception e){
             logger.error("deleteFolder Exception",e.getMessage());
         }
+    }
+
+    @Override
+    public boolean createCustomer(String nickname) {
+        File init = new File("readme.txt");
+        if (init.exists()) {
+            try {
+               String response = uploadFileToS3Bucket(init.getName(),nickname,init);
+               if (!response.equals("")) return true;
+            }catch (Exception e){
+                e.printStackTrace();
+                return false;
+            }
+        }
+        else
+            logger.error("init file not found");
+        return false;
     }
 }
 

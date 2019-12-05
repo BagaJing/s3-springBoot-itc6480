@@ -10,11 +10,11 @@ import java.util.Map;
 
 @Component
 public class DeferredResponseHolder {
-    private Map<String, DeferredResult<ResponseEntity<Resource>>> resourceMap = new HashMap<>();
-    public Map<String, DeferredResult<ResponseEntity<Resource>>> getResourceMap() {
+    private Map<String, DeferredResult<ResponseEntity<byte[]>>> resourceMap = new HashMap<>();
+    public Map<String, DeferredResult<ResponseEntity<byte[]>>> getResourceMap() {
         return resourceMap;
     }
-    public void setResourceMap(Map<String, DeferredResult<ResponseEntity<Resource>>> resourceMap) {
+    public void setResourceMap(Map<String, DeferredResult<ResponseEntity<byte[]>>> resourceMap) {
         this.resourceMap = resourceMap;
     }
 }

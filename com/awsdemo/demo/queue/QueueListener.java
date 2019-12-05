@@ -1,5 +1,10 @@
 package com.awsdemo.demo.queue;
 
+import com.awsdemo.demo.domain.Customer;
+import com.awsdemo.demo.domain.Record;
+import com.awsdemo.demo.services.customerServiceImpl;
+import com.awsdemo.demo.services.recordService;
+import com.awsdemo.demo.services.recordServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +13,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.util.Arrays;
+import java.util.Date;
 
 @Component
 @Import({actionsQueue.class,DeferredResultHolder.class})
@@ -24,6 +36,10 @@ public class QueueListener implements ApplicationListener<ContextRefreshedEvent>
     @Override
     @Async("taskAsyncPool")
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
+
+        recordServiceImpl recordService = new recordServiceImpl();
+        customerServiceImpl customerService = new customerServiceImpl();
+        resultMap result = new resultMap();
         /*
         new Thread(()->{
            while (true){
@@ -46,14 +62,12 @@ public class QueueListener implements ApplicationListener<ContextRefreshedEvent>
            }
         }).start();
          */
+
             while (true) {
                 if (!theQueue.getQueue().isEmpty()) {
                     String orderNumber = theQueue.getQueue().poll();
-                    String orderType = "";
-                    if (orderNumber.startsWith("INDEX")) orderType = INDEX;
-                    if (orderNumber.startsWith("UPLOAD")) orderType = RE_UPLOAD;
-                    if (orderNumber.startsWith("DELETE")) orderType = RE_UPLOAD;
-                    if (orderNumber.startsWith("RENAME")) orderType = RE_UPLOAD;
+                    String type = orderNumber.substring(0,orderNumber.indexOf("-"));
+                    String orderType = result.getMap().getOrDefault(type,"index-dev");
                     logger.info("Retrun Order Status: " + orderNumber);
                     logger.info("Place " + orderType + " Success. Order Number: " + orderNumber);
                     resultHolder.getMap().get(orderNumber).setResult(orderType);

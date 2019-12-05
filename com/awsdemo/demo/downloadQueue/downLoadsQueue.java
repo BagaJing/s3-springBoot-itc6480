@@ -19,39 +19,42 @@ public class downLoadsQueue {
     private Logger logger = LoggerFactory.getLogger(getClass());
     @Autowired
     private amazonClient amazonClient;
-    Queue<AbstractMap.SimpleEntry<String,ResponseEntity<Resource>>> queue = new LinkedList<>();
+    Queue<AbstractMap.SimpleEntry<String,ResponseEntity<byte[]>>> queue = new LinkedList<>();
 
-    public ResponseEntity<byte[]> setDownloadFileOrder(String orderId, String path) throws IOException{
+    public ResponseEntity<byte[]> setsingleDownloadFileOrder(String orderId, String path) throws IOException{
         return amazonClient.download(path);
     }
-    /*
+
+
+
     @Async("taskAsyncPool")
     public void setDownloadFileOrder(String orderId, String path) throws IOException {
-        ResponseEntity<Resource> res = amazonClient.download(path);
-        AbstractMap.SimpleEntry<String,ResponseEntity<Resource>> entry = new AbstractMap.SimpleEntry<>(orderId,res);
+        ResponseEntity<byte[]> res = amazonClient.download(path);
+        AbstractMap.SimpleEntry<String,ResponseEntity<byte[]>> entry = new AbstractMap.SimpleEntry<>(orderId,res);
         queue.offer(entry);
     }
 
-     */
 
-    public ResponseEntity<byte[]> setDownloadFolderOrder(String orderId,String path) throws IOException{
+    public ResponseEntity<byte[]> setsingleDownloadFolderOrder(String orderId,String path) throws IOException{
         return amazonClient.downloadFolder(path);
     }
-    /*
+
+
+
     @Async("taskAsyncPool")
     public void setDownloadFolderOrder(String orderId,String path) throws IOException{
-        ResponseEntity<Resource> res = amazonClient.downloadFolder(path);
-        AbstractMap.SimpleEntry<String,ResponseEntity<Resource>> entry = new AbstractMap.SimpleEntry<>(orderId,res);
+        ResponseEntity<byte[]> res = amazonClient.downloadFolder(path);
+        AbstractMap.SimpleEntry<String,ResponseEntity<byte[]>> entry = new AbstractMap.SimpleEntry<>(orderId,res);
         queue.offer(entry);
     }
 
-     */
 
-    public Queue<AbstractMap.SimpleEntry<String, ResponseEntity<Resource>>> getQueue() {
+
+    public Queue<AbstractMap.SimpleEntry<String, ResponseEntity<byte[]>>> getQueue() {
         return queue;
     }
 
-    public void setQueue(Queue<AbstractMap.SimpleEntry<String, ResponseEntity<Resource>>> queue) {
+    public void setQueue(Queue<AbstractMap.SimpleEntry<String, ResponseEntity<byte[]>>> queue) {
         this.queue = queue;
     }
 }
