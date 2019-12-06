@@ -31,33 +31,17 @@ public class action {
     private customerService customerService;
     private Logger logger = LoggerFactory.getLogger(getClass());
 
-    public void setIndexShowOrderWithSession(String placeOrder, Model model, String subDir, String folderName,Long id){
-        Customer c = customerService.findCustomerById(id);
-        logger.info("PageShow Order Received : "+placeOrder);
-        List<String> list = amazonClient.getKeyFromS3Bucket(subDir,folderName);
-        List<List<String>> res = contentTypeUtils.addTypes(list);
-        model.addAttribute("objects",res);
-        model.addAttribute("rootDir",subDir.split("/"));
-        model.addAttribute("parent",folderName);
-        model.addAttribute("records",recordService.listByCustomer(c));
-    }
     public void setIndexShowOrder(String placeOrder, Model model, String subDir,Long id) throws NotFoundException {
         Customer c = customerService.findCustomerById(id);
         if (c == null) throw new NotFoundException("User Not Found");
         String folderName = c.getNickname();
         logger.info("PageShow Order Received : "+placeOrder);
-        List<String> list = amazonClient.getKeyFromS3Bucket(subDir,folderName+"/"+folderName);
+        List<String> list = amazonClient.getKeyFromS3Bucket(subDir,folderName);
         List<List<String>> res = contentTypeUtils.addTypes(list);
-        String[] temp = subDir.split("/");
-        String uploadRoot = "";
-        for (int i = 0 ; i < temp.length ; i++){
-            if (i != temp.length-1) uploadRoot += temp[i]+"/";
-            else uploadRoot += temp[i];
-        }
         model.addAttribute("id",id);
         model.addAttribute("objects",res);
         model.addAttribute("rootDir",subDir.split("/"));
-        model.addAttribute("uploadRoot",uploadRoot);
+      //  model.addAttribute("uploadRoot",uploadRoot);
         model.addAttribute("parent",folderName);
         model.addAttribute("records",recordService.listByCustomer(c));;
     }
@@ -74,12 +58,13 @@ public class action {
         String folderName = c.getNickname();
         logger.info("Upload Order Request Received: "+placeOrder);
         String uploadResponse = "";
-        String returnDir = dir; // the value to redirect
         dir = dir + (folder.equals("")? "":"/"+folder);
         if (!dir.startsWith("/")) dir = "/"+dir;
+        if (dir.startsWith("//")) dir = dir.substring(1);
         logger.info("dir "+dir);
         try{
             uploadResponse = amazonClient.batchUploadFiles(files,dir,folderName);
+            logger.info(uploadResponse);
 
         }catch (Exception e){
             e.printStackTrace();
@@ -124,8 +109,7 @@ public class action {
                                    String parent,
                                    String oldName,
                                    String newName,
-                                   String root,
-                                   RedirectAttributes attributes){
+                                   String root){
         logger.info("Rename File Order Request Recived: "+placeOrder);
         oldName = parent+"/"+(root.equals("")? "":root+"/")+oldName;
         newName = parent+"/"+(root.equals("")? "":root+"/")+newName;
@@ -133,7 +117,7 @@ public class action {
         logger.info(newName);
         try{
             amazonClient.renameFile(oldName,newName);
-            attributes.addFlashAttribute("dir",root);
+          //  attributes.addFlashAttribute("dir",root);
         }catch (Exception e){
             logger.error("Rename process exception",e);
         }
@@ -151,7 +135,7 @@ public class action {
         logger.info("dir Level test "+level);
         try{
             amazonClient.renameFolder(oldName,newName,level);
-            attributes.addFlashAttribute("dir",root);
+           // attributes.addFlashAttribute("dir",root);
         }catch (Exception e){
             logger.error("Rename process exception",e);
         }

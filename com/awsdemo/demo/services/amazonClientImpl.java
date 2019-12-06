@@ -24,8 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
@@ -33,8 +31,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+
 
 @Service
 public class amazonClientImpl implements amazonClient {
@@ -92,7 +89,7 @@ public class amazonClientImpl implements amazonClient {
      * use TransferManager.uploadFileList to upload multiple files
      * */
 
-    private String batchUploadToS3Bucket(List<File> files,String dir,String folderName) {
+    private  String batchUploadToS3Bucket(List<File> files, String dir, String folderName) {
         if (files.size()==0) return "no files found to upload";
         String response = "";
         TransferManager transfer = TransferManagerBuilder.standard().withS3Client(s3Client).build();
@@ -112,8 +109,15 @@ public class amazonClientImpl implements amazonClient {
             };
             String path = folderName;
             // path: rootFolder Name dir: relative path
-            path = path + (dir.equals("")? "":dir);
-            MultipleFileUpload upload = transfer.uploadFileList(bucketName,path,new File("."),files,null,null,aclProvider);
+            path = path + (dir.equals("/")? "":dir);
+            // path: rootFolder Name dir: relative path
+            logger.info("final Path:" +path);
+            for (File file : files) {
+                uploadFileToS3Bucket(file.getName(),path,file);
+                file.delete();
+            }
+            /*
+            MultipleFileUpload upload = transfer.uploadFileList(bucketName,"bagajing",new File("."),files,null,null,aclProvider);
             do{
                 try {
                     Thread.sleep(100);
@@ -127,14 +131,15 @@ public class amazonClientImpl implements amazonClient {
             }while (!upload.isDone());
             response = upload.getState().toString();
             /*upload succeed, delete local files*/
-            for (File file : files)
-                file.delete();
+
+
 
         } catch (Exception e){
             response = e.getMessage();
         }
         return response;
     }
+
     //-------------------------------------------------------public interfaces------------------------------------------
     /*
      * public interface for single upload
@@ -237,6 +242,7 @@ public class amazonClientImpl implements amazonClient {
     public ResponseEntity<byte[]> downloadFolder(String path) throws IOException {
         TransferManager transfer = TransferManagerBuilder.standard().withS3Client(s3Client).build();
         if (path.endsWith("/")) path = path.substring(0,path.length()-1);
+        path = "/tmp/"+path;
         String dirName = path.substring(path.indexOf("/")+1);
         File parent = new File(dirName);
         //logger.info("downloadFolder test: dir "+dirName);
@@ -249,9 +255,10 @@ public class amazonClientImpl implements amazonClient {
         } catch (AmazonS3Exception e){
             logger.error("download Folder Exception from AmazonClientImpl",e);
         }
-        String sourceDir = dirName;
-        zipUtils.folderToZip(sourceDir,new FileOutputStream(new File(sourceDir+".zip")));
-        //logger.info("download Folder exists or not :"+ new File(sourceDir).exists());
+        String sourceDir = path;
+        logger.info("download Folder exists or not :"+ new File(sourceDir).exists());
+        zipUtils.folderToZip(sourceDir,new FileOutputStream(new File(dirName+".zip")));
+
         //logger.info("zip outcome exists or not: "+new File(sourceDir+".zip").exists());
         File zipFile = new File(sourceDir+".zip");
         if (zipFile.exists()){
@@ -388,7 +395,7 @@ public class amazonClientImpl implements amazonClient {
         File init = new File("readme.txt");
         if (init.exists()) {
             try {
-               String response = uploadFileToS3Bucket(init.getName(),nickname+"/"+nickname,init);
+               String response = uploadFileToS3Bucket(init.getName(),nickname,init);
                if (!response.equals("")) return true;
             }catch (Exception e){
                 e.printStackTrace();

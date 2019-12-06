@@ -8,7 +8,6 @@ import com.awsdemo.demo.domain.Customer;
 import com.awsdemo.demo.services.amazonClient;
 import com.awsdemo.demo.services.customerService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,8 +19,8 @@ import javax.servlet.http.HttpSession;
 import java.util.Date;
 
 @Controller
-//@RequestMapping("/depoytest3/client")
-@RequestMapping("/client")
+@RequestMapping("/depoytest3/client")
+//@RequestMapping("/client")
 public class clientLoginController {
     private String RELOGIN = "redirect:/depoytest3/client/login";
     private String REINDEX = "redirect:/depoytest3/client/index";
@@ -43,8 +42,7 @@ public class clientLoginController {
     @PostMapping("/login")
     public String login(@RequestParam("username") String username,
                         @RequestParam("password") String password,
-
-                                     RedirectAttributes attributes){
+                        RedirectAttributes attributes){
         Customer customer = customerService.checkCustomer(username,password);
         if (customer == null){
             //attributes.addFlashAttribute("message","username or password is not valid");
@@ -57,8 +55,7 @@ public class clientLoginController {
     @PostMapping("/register")
     public String register(@RequestParam("username") String username,
                            @RequestParam("password") String password,
-                           @RequestParam("nickname") String nickname,
-                           RedirectAttributes attributes){
+                           @RequestParam("nickname") String nickname){
         Customer customer = new Customer();
         customer.setUsername(username);
         customer.setPassword(password);
@@ -68,13 +65,13 @@ public class clientLoginController {
         if (amazonClient.createCustomer(nickname)){
             Customer c = customerService.save(customer);
             if (c!=null){
-                attributes.addFlashAttribute("message","Register Successfully");
+               // attributes.addFlashAttribute("message","Register Successfully");
                 return RELOGIN;
             }
-            attributes.addFlashAttribute("message","Register Failed");
+           // attributes.addFlashAttribute("message","Register Failed");
             return REREGISTER;
         }
-        attributes.addFlashAttribute("message","Register Failed");
+       // attributes.addFlashAttribute("message","Register Failed");
         return REREGISTER;
     }
     @GetMapping("/logout")
