@@ -138,7 +138,7 @@ public class clientController {
                                            @PathVariable Long id) throws IOException, NotFoundException {
         Customer c = customerService.findCustomerById(id);
         if (c == null) throw new NotFoundException("User Not Found");
-        String folderName = c.getNickname();
+        String folderName = c.getNickname()+"/"+c.getNickname();
         String order = "DOWN-"+utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
         String path = folderName+"/"+(root.equals("")? "":root+"/")+name;
         return downQueue.setsingleDownloadFileOrder(order,path);
