@@ -127,9 +127,9 @@ public class amazonClientImpl implements amazonClient {
             }while (!upload.isDone());
             response = upload.getState().toString();
             /*upload succeed, delete local files*/
-            for (File file : files){
+            for (File file : files)
                 file.delete();
-            }
+
         } catch (Exception e){
             response = e.getMessage();
         }
@@ -172,6 +172,7 @@ public class amazonClientImpl implements amazonClient {
             List<File> convertedFiles = new ArrayList<>();
             for(int i = 0 ; i < files.length ; i++){
                 convertedFiles.add(amazonUtils.convertMultiPartFile(files[i]));
+              //  convertedFiles.add(files[i]);
             }
             //  System.out.println("size: "+convertedFiles.size());
            response = batchUploadToS3Bucket(convertedFiles,dir,folderName);
@@ -387,7 +388,7 @@ public class amazonClientImpl implements amazonClient {
         File init = new File("readme.txt");
         if (init.exists()) {
             try {
-               String response = uploadFileToS3Bucket(init.getName(),nickname,init);
+               String response = uploadFileToS3Bucket(init.getName(),nickname+"/"+nickname,init);
                if (!response.equals("")) return true;
             }catch (Exception e){
                 e.printStackTrace();

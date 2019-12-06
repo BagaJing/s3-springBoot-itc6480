@@ -8,10 +8,14 @@ import javax.servlet.http.HttpServletResponse;
 public class loginInterceptor extends HandlerInterceptorAdapter {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+
         if (request.getSession().getAttribute("customer")== null) {
             response.sendRedirect("/dev/login");
+           // response.sendRedirect("/depoytest3/client/login");
             return false;
         }
+
+
         return true;
     }
 }

@@ -1,12 +1,13 @@
 package com.awsdemo.demo.utils;
 
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class amazonUtils {
@@ -16,11 +17,19 @@ public class amazonUtils {
      * Then convert process is needed
      */
     public static File convertMultiPartFile(MultipartFile file) throws IOException {
-        File targetFile = new File(generateFileName(file));
+        File targetFile = new File("/tmp/"+generateFileName(file));
         FileOutputStream fos = new FileOutputStream(targetFile);
         fos.write(file.getBytes());
         fos.close();
         return targetFile;
+    }
+    public static File covertFileNoCache(MultipartFile mFile) {
+        if(!mFile.isEmpty()) {
+            CommonsMultipartFile commonsmultipartfile = (CommonsMultipartFile) mFile;
+            DiskFileItem diskFileItem = (DiskFileItem) commonsmultipartfile.getFileItem();
+            return diskFileItem.getStoreLocation();
+        }
+        return null;
     }
     public static List<File> covertMultiPartFiles(MultipartFile[] files) throws IOException{
        // System.out.println("awsAsyncUtils. Thread: "+Thread.currentThread().getName());
@@ -41,7 +50,7 @@ public class amazonUtils {
      * use timestamp to generate it
      */
     private static String generateFileName(MultipartFile file){
-        return file.getOriginalFilename().replace(" ","_");
+        return "XX"+file.getOriginalFilename().replace(" ","_");
     }
     public static void printProgressBar(double pct){
         final int bar_size = 40;

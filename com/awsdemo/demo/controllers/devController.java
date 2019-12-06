@@ -93,7 +93,7 @@ public class devController {
 
      */
 
-public DeferredResult<String> upload(@RequestParam("files")MultipartFile[] files,
+public DeferredResult<String> upload(@RequestParam MultipartFile[] files,
                                      @RequestParam("path") String path, // relative path
                                      @RequestParam("folder") String folder, // upload as a folder or not
                                      HttpSession session,
@@ -101,8 +101,6 @@ public DeferredResult<String> upload(@RequestParam("files")MultipartFile[] files
     Customer c = (Customer)session.getAttribute("customer");
     String folderName = c.getNickname();
     String placeOrder = "UPLOAD-"+utils.getRandomOrderNum(DEFAULT_ORDER_LENTGH);
-    logger.info("Test path value "+path);
-    logger.info("Test folder value "+folder);
     actionsQueue.setUploadOrder(placeOrder,files,path,folder,attributes,folderName);
     actionsQueue.saveRecord("UPLOAD",c,placeOrder,files.length);
     DeferredResult<String> result = new DeferredResult<>();
