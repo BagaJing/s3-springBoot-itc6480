@@ -243,8 +243,7 @@ public class amazonClientImpl implements amazonClient {
     public ResponseEntity<byte[]> downloadFolder(String path) throws IOException {
         TransferManager transfer = TransferManagerBuilder.standard().withS3Client(s3Client).build();
         if (path.endsWith("/")) path = path.substring(0,path.length()-1);
-        path = "/tmp/"+path;
-        String dirName = path.substring(path.indexOf("/")+1);
+        String dirName = "/tmp/"+path.substring(path.indexOf("/")+1);
         File parent = new File(dirName);
         //logger.info("downloadFolder test: dir "+dirName);
         try {
@@ -256,7 +255,7 @@ public class amazonClientImpl implements amazonClient {
         } catch (AmazonS3Exception e){
             logger.error("download Folder Exception from AmazonClientImpl",e);
         }
-        String sourceDir = path;
+        String sourceDir = dirName;
         logger.info("download Folder exists or not :"+ new File(sourceDir).exists());
         zipUtils.folderToZip(sourceDir,new FileOutputStream(new File(dirName+".zip")));
 

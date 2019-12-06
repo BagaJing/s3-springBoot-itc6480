@@ -22,7 +22,7 @@ import java.io.IOException;
 
 @Controller
 @RequestMapping("/client")
-//@RequestMapping("/depoytest3/client")
+//@RequestMapping("/depoytest3/client") //test
 public class clientController {
 
     private final static int DEFAULT_ORDER_LENTGH = 8;
