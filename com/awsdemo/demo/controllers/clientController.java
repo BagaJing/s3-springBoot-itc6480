@@ -106,6 +106,7 @@ public class clientController {
                                @RequestParam String newName,
                                @PathVariable Long id) throws NotFoundException {
         root = (root.equals("/") ? "" : root);
+        root = (root.startsWith("/")? root.substring(1):root);
         Customer c = customerService.findCustomerById(id);
         if (c == null) throw new NotFoundException("User Not Found");
         String folderName = c.getNickname();
@@ -120,6 +121,8 @@ public class clientController {
                                 @RequestParam String newName,
                                 RedirectAttributes attributes,
                                 @PathVariable Long id) throws NotFoundException {
+        root = (root.equals("/") ? "" : root);
+        root = (root.startsWith("/")? root.substring(1):root);
         Customer c = customerService.findCustomerById(id);
         if (c == null) throw new NotFoundException("User Not Found");
         String folderName = c.getNickname();

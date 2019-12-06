@@ -112,10 +112,11 @@ public class amazonClientImpl implements amazonClient {
             path = path + (dir.equals("/")? "":dir);
             // path: rootFolder Name dir: relative path
             logger.info("final Path:" +path);
-            for (File file : files) {
+            for (File file : files)
                 uploadFileToS3Bucket(file.getName(),path,file);
+            for (File file : files)
                 file.delete();
-            }
+
             /*
             MultipleFileUpload upload = transfer.uploadFileList(bucketName,"bagajing",new File("."),files,null,null,aclProvider);
             do{

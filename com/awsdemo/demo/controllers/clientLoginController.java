@@ -19,8 +19,8 @@ import javax.servlet.http.HttpSession;
 import java.util.Date;
 
 @Controller
-@RequestMapping("/depoytest3/client")
-//@RequestMapping("/client")
+//@RequestMapping("/depoytest3/client")
+@RequestMapping("/client")
 public class clientLoginController {
     private String RELOGIN = "redirect:/depoytest3/client/login";
     private String REINDEX = "redirect:/depoytest3/client/index";

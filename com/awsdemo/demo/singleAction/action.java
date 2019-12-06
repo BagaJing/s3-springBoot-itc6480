@@ -52,14 +52,16 @@ public class action {
         model.addAttribute("objects",res);
         model.addAttribute("rootDir",subDir);
     }
+    //@Async("taskAsyncPool")
     public void setUploadOrder(String placeOrder, MultipartFile[] files, String dir, String folder, RedirectAttributes attributes, Long id) throws NotFoundException {
         Customer c = customerService.findCustomerById(id);
         if (c == null) throw new NotFoundException("User Not Found");
         String folderName = c.getNickname();
         logger.info("Upload Order Request Received: "+placeOrder);
         String uploadResponse = "";
-        dir = dir + (folder.equals("")? "":"/"+folder);
-        if (!dir.startsWith("/")) dir = "/"+dir;
+        logger.info("dir "+dir);
+        dir = dir + (folder.equals("/")? "":"/"+folder);
+        if ((!dir.startsWith("/"))&&(!dir.equals("/"))) dir = "/"+dir;
         if (dir.startsWith("//")) dir = dir.substring(1);
         logger.info("dir "+dir);
         try{
