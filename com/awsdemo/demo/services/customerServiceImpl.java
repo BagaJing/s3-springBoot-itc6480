@@ -10,10 +10,7 @@ import org.springframework.stereotype.Service;
 public class customerServiceImpl implements customerService {
     @Autowired
     private customerRepository customerRepository;
-    @Override
-    public Customer checkCustomer(String username, String password) {
-        return customerRepository.findByUsernameAndPassword(username,password);
-    }
+
 
     @Override
     public Customer findCustomerById(Long id) {

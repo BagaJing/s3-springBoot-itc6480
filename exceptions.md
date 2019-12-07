@@ -1,7 +1,11 @@
 # Exception:
-### 1. Session Must Not be Null
+### 1.Session Must Not be Null
 **Reason:** API GATEWAY cannot set cookie
-### 2. Uploaded File corrupted
-### 3. Read-Only System
-**Reason**: only /tmp is writable in lambda function
+### 2.Uploaded File corrupted
+    Reason: unknown
+### 3.Read-Only System
+    **Reason**: only /tmp is writable in lambda function
 **solution** : add prefix "/tmp/" before the filename, when temp file is needed to create
+### 4.TransferManager.uploadFileList() String Index out of Bound
+    Reason: unknown
+    Solution: replace by putObject()

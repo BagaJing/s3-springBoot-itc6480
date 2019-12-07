@@ -34,13 +34,13 @@ public class loginController {
                         @RequestParam("password") String password,
                         HttpSession session,
                         RedirectAttributes attributes){
-        Customer customer = customerService.checkCustomer(username,password);
+        Customer customer = null;
         if (customer == null){
             attributes.addFlashAttribute("message","username or password is not valid");
             return "redirect:/dev";
         }
-        customer.setPassword(null);
-        session.setAttribute("customer",customer);
+       // customer.setPassword(null);
+      //  session.setAttribute("customer",customer);
         return "redirect:/dev/index";
     }
     @PostMapping("/register")
@@ -49,11 +49,11 @@ public class loginController {
                            @RequestParam("nickname") String nickname,
                            RedirectAttributes attributes){
         Customer customer = new Customer();
-        customer.setUsername(username);
-        customer.setPassword(password);
+      //  customer.setUsername(username);
+     //   customer.setPassword(password);
         customer.setNickname(nickname);
-        customer.setCreatedDate(new Date());
-        customer.setActive(true);
+     //   customer.setCreatedDate(new Date());
+     //   customer.setActive(true);
         if (amazonClient.createCustomer(nickname)){
             Customer c = customerService.save(customer);
             if (c!=null){

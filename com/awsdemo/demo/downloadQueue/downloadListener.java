@@ -25,6 +25,7 @@ public class downloadListener implements ApplicationListener<ContextRefreshedEve
     @Override
     @Async("taskAsyncPool")
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
+
         while (true){
             if (!queue.getQueue().isEmpty()){
                 AbstractMap.SimpleEntry<String, ResponseEntity<byte[]>> entry = queue.getQueue().poll();
@@ -39,5 +40,7 @@ public class downloadListener implements ApplicationListener<ContextRefreshedEve
                 }
             }
         }
+
+
     }
 }

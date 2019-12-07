@@ -1,6 +1,5 @@
 package com.awsdemo.demo.singleAction;
 
-import com.awsdemo.demo.StreamLambdaHandler;
 import com.awsdemo.demo.domain.Customer;
 import com.awsdemo.demo.domain.Record;
 import com.awsdemo.demo.services.amazonClient;
@@ -13,11 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.File;
 import java.util.Date;
 import java.util.List;
 
