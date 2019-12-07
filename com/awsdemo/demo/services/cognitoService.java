@@ -13,16 +13,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import vo.userBasic;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class cognitoService implements cognitoInterface {
     private Logger logger = LoggerFactory.getLogger(getClass());
     //@Value("${CognitoProperties.aKey}")
-    private String cognitoAccessKey = "AKIAR4AZAJJLTVVJSTPA";
+    private String cognitoAccessKey = "";
     //@Value("${CognitoProperties.sKey}")
-    private String cognitoSecretKey = "swieuXazmYz2elJhUnUIh6apJScYmo2q10SqT9Kd";
+    private String cognitoSecretKey = "";
     //@Value("${CognitoProperties.userPool}")
-    private String poolId = "us-east-1_Y2PgefGKO";
+    private String poolId = "";
+    private String clientId = "";
     private AWSCognitoIdentityProvider identityProvider = null;
     public cognitoService() {
         //logger.info(cognitoAccessKey);
@@ -113,6 +115,77 @@ public class cognitoService implements cognitoInterface {
         }
         return user;
     }
-    //session login
-    
+    public userBasic userLogin(String username,String password){
+        userBasic userBasic = null;
+        SessionInfo sessionInfo = sessionLogin(username,password);
+        if (sessionInfo != null){
+             userBasic = getUserBasic(username);
+             logger.info(sessionInfo.getAccessToken());
+        }
+        return userBasic;
+    }
+
+    /**
+     *
+     * @param userName
+     * @return userBasic
+     * @throws AWSCognitoIdentityProviderException
+     */
+    public userBasic getUserBasic(String userName) throws AWSCognitoIdentityProviderException{
+        AdminGetUserRequest userRequest = new AdminGetUserRequest()
+                                            .withUsername(userName)
+                                            .withUserPoolId(poolId);
+        AdminGetUserResult userResult = identityProvider.adminGetUser(userRequest);
+        List<AttributeType> userAttributes = userResult.getUserAttributes();
+        String rsltUserName = userResult.getUsername();
+        String email = null;
+        String Id = null;
+        String nickname = null;
+        for (AttributeType attr : userAttributes){
+            if (attr.getName().equals("nickname"))
+                nickname = attr.getValue();
+            if (attr.getName().equals("email"))
+                email = attr.getValue();
+            if (attr.getName().equals("custom:id"))
+                Id = attr.getValue();
+        }
+        userBasic info = null;
+        if (rsltUserName!=null&&email!=null&&Id!=null&&nickname!=null&&Id!=null){
+            info = new userBasic();
+            info.setId(Long.valueOf(Id));
+            info.setNickname(nickname);
+            info.setUsername(rsltUserName);
+            info.setEmail(email);
+        }
+        return info;
+    }
+    /**
+     *
+     * @param userName
+     * @param password
+     * @return SessionInfo
+     */
+    private SessionInfo sessionLogin(String userName,String password){
+        SessionInfo info = null;
+        HashMap<String,String> authParams = new HashMap<>();
+        authParams.put("USERNAME",userName);
+        authParams.put("PASSWORD",password);
+        AdminInitiateAuthRequest authRequest = new AdminInitiateAuthRequest()
+                                                .withAuthFlow(AuthFlowType.ADMIN_NO_SRP_AUTH)
+                                                .withUserPoolId(poolId)
+                                                .withClientId(clientId)
+                                                .withAuthParameters(authParams);
+        AdminInitiateAuthResult authResult = identityProvider.adminInitiateAuth(authRequest);
+        if (authResult != null){
+            String session = authResult.getSession();
+            String accessToken = null;
+            AuthenticationResultType resultType = authResult.getAuthenticationResult();
+            if (resultType != null){
+                accessToken = resultType.getAccessToken();
+            }
+            final String challengeResult = authResult.getChallengeName();
+            info = new SessionInfo(session,accessToken,challengeResult);
+        }
+        return info;
+    }
 }

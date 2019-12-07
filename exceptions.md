@@ -9,3 +9,5 @@
 ### 4.TransferManager.uploadFileList() String Index out of Bound
     Reason: unknown
     Solution: replace by putObject()
+### 5. Cognito: "Error: Unable to verify secret hash for client 4b*******fd".
+https://stackoverflow.com/questions/37438879/unable-to-verify-secret-hash-for-client-in-amazon-cognito-userpools

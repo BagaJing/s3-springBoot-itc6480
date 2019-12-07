@@ -26,8 +26,8 @@ import java.util.Date;
 import java.util.Random;
 
 @Controller
-@RequestMapping("/depoytest3/client")
-//@RequestMapping("/client")
+//@RequestMapping("/depoytest3/client")
+@RequestMapping("/client")
 public class clientLoginController {
     private String RELOGIN = "redirect:/depoytest3/client/login";
     private String REINDEX = "redirect:/depoytest3/client/index";
@@ -53,16 +53,15 @@ public class clientLoginController {
     }
     @PostMapping("/login")
     public String login(@RequestParam("username") String username,
-                        @RequestParam("password") String password,
-                        RedirectAttributes attributes){
-        Customer customer = null;
-        if (customer == null){
-            //attributes.addFlashAttribute("message","username or password is not valid");
-            return "redirect:/depoytest3/client/login";
+                        @RequestParam("password") String password){
+        cognitoService cognito = new cognitoService();
+        userBasic userBasic = cognito.userLogin(username,password);
+        if (userBasic!=null){
+            logger.info("login succeed");
+            logger.info(userBasic.toString());
+            return "redirect:/depoytest3/client/index/"+userBasic.getId();
         }
-       // customer.setPassword(null);
-        //attributes.addFlashAttribute("customer",customer);
-        return "redirect:/depoytest3/client/index/"+customer.getId();
+        return "redirect:/depoytest3/client/login";
     }
     @PostMapping("/register")
     public String register(@RequestParam String username,
