@@ -18,11 +18,11 @@ import java.util.List;
 public class cognitoService implements cognitoInterface {
     private Logger logger = LoggerFactory.getLogger(getClass());
     //@Value("${CognitoProperties.aKey}")
-    private String cognitoAccessKey = "AKIAR4AZAJJLTVVJSTPA";
+    private String cognitoAccessKey = "";
     //@Value("${CognitoProperties.sKey}")
-    private String cognitoSecretKey = "swieuXazmYz2elJhUnUIh6apJScYmo2q10SqT9Kd";
+    private String cognitoSecretKey = "";
     //@Value("${CognitoProperties.userPool}")
-    private String poolId = "us-east-1_Y2PgefGKO";
+    private String poolId = "";
     private AWSCognitoIdentityProvider identityProvider = null;
     public cognitoService() {
         //logger.info(cognitoAccessKey);
