@@ -53,6 +53,7 @@ public class action {
     public void setUploadOrder(String placeOrder, MultipartFile[] files, String dir, String folder, RedirectAttributes attributes, Long id) throws NotFoundException {
         Customer c = customerService.findCustomerById(id);
         if (c == null) throw new NotFoundException("User Not Found");
+        String returnDir = dir;
         String folderName = c.getNickname();
         logger.info("Upload Order Request Received: "+placeOrder);
         String uploadResponse = "";
@@ -68,7 +69,7 @@ public class action {
         }catch (Exception e){
             e.printStackTrace();
         }
-        //attributes.addFlashAttribute("dir",returnDir);
+        attributes.addAttribute("dir",returnDir);
         logger.info("Upload Order Request Finished: "+placeOrder);
     }
     @Async("taskAsyncPool")
@@ -88,7 +89,7 @@ public class action {
         logger.info("Delete Order Request Received: "+placeOrder);
         try {
             amazonClient.deleteFile(path);
-            //attributes.addFlashAttribute("dir",root);
+            attributes.addAttribute("dir",root);
             logger.info("Delete Order Requeste Finished: "+placeOrder);
         } catch (Exception e){
             logger.error("Delete File Exception",e);
@@ -98,7 +99,7 @@ public class action {
         logger.info("Delte Folder Order Received: "+placeOrder);
         try {
             amazonClient.deleteFolder(prefix,folderName);
-            //attributes.addFlashAttribute("dir",root);
+            attributes.addAttribute("dir",root);
             logger.info("Delete ORder Request Finished: "+placeOrder);
         }catch (Exception e){
             logger.error("Delete Folder Exception",e.getMessage());
@@ -108,7 +109,8 @@ public class action {
                                    String parent,
                                    String oldName,
                                    String newName,
-                                   String root){
+                                   String root,
+                                   RedirectAttributes attributes){
         logger.info("Rename File Order Request Recived: "+placeOrder);
         oldName = parent+"/"+(root.equals("")? "":root+"/")+oldName;
         newName = parent+"/"+(root.equals("")? "":root+"/")+newName;
@@ -116,10 +118,10 @@ public class action {
         logger.info(newName);
         try{
             amazonClient.renameFile(oldName,newName);
-          //  attributes.addFlashAttribute("dir",root);
         }catch (Exception e){
             logger.error("Rename process exception",e);
         }
+        attributes.addAttribute("dir",root);
         logger.info("Rename File Order Request Finished "+placeOrder);
     }
     public  void setRenameFolderOrder(String placeOrder,
@@ -134,7 +136,7 @@ public class action {
         logger.info("dir Level test "+level);
         try{
             amazonClient.renameFolder(oldName,newName,level);
-           // attributes.addFlashAttribute("dir",root);
+            attributes.addAttribute("dir",root);
         }catch (Exception e){
             logger.error("Rename process exception",e);
         }

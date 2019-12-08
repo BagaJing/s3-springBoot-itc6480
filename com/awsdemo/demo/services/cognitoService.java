@@ -8,10 +8,8 @@
         import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
         import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder;
         import com.amazonaws.services.cognitoidp.model.*;
-        import com.awsdemo.demo.domain.Customer;
         import org.slf4j.Logger;
         import org.slf4j.LoggerFactory;
-        import org.springframework.beans.factory.annotation.Value;
         import vo.userBasic;
 
         import java.util.HashMap;
@@ -123,6 +121,10 @@ public class cognitoService implements cognitoInterface {
         // The process of sessionLogin should either return a session ID (if the account has not been verified) or a
         // token ID (if the account has been verified).
         if (sessionInfo != null) {
+            logger.info("SessionInfo Content");
+            logger.info(sessionInfo.getSession());
+            logger.info(sessionInfo.getAccessToken());
+            logger.info(sessionInfo.getChallengeResult());
              info = getUserBasic(username);
         }
         return info;
