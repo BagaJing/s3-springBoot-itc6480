@@ -1,36 +1,48 @@
 package com.awsdemo.demo.controllers;
 
 
-import com.amazonaws.Response;
-import com.amazonaws.services.lambda.runtime.events.CloudFrontEvent;
-import com.awsdemo.demo.StreamLambdaHandler;
-import com.awsdemo.demo.domain.Customer;
-import com.awsdemo.demo.services.amazonClient;
+
+import com.awsdemo.demo.interceptor.addHeaderFilter;
+import com.awsdemo.demo.interceptor.loginInterceptor;
 import com.awsdemo.demo.services.cognitoService;
-import com.awsdemo.demo.services.customerService;
+import com.awsdemo.demo.services.loginSession;
 import com.awsdemo.demo.services.transactionInterface;
+import org.apache.http.Header;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 import vo.userBasic;
 
-import javax.servlet.ServletContext;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionContext;
-import java.util.Date;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Random;
 
 @Controller
-@RequestMapping("/depoytest3/client")
-//@RequestMapping("/client")
+//@RequestMapping("/depoytest3/client") //test
+@RequestMapping("/client")
 public class clientLoginController {
     private String RELOGIN = "redirect:/depoytest3/client/login";
     private String REINDEX = "redirect:/depoytest3/client/index";
@@ -133,40 +145,54 @@ public class clientLoginController {
             return "login";
     }
     @GetMapping("/login")
-    public String loginPage(){
+    public String loginPage(Model model,@ModelAttribute("message") String message){
+        model.addAttribute("message",message);
         return "login";
     }
     @GetMapping("/register")
-    public String registerPage(){
+    public String registerPage(Model model,@ModelAttribute("message") String message){
+        model.addAttribute("message",message);
         return  "cognito-re";
     }
+    @GetMapping("/reset")
+    public String resetPage(Model model,@ModelAttribute("message") String message){
+        model.addAttribute("message",message);
+        return "reset";
+    }
+    @CrossOrigin
     @PostMapping("/login")
     public String login(@RequestParam("username") String username,
-                        @RequestParam("password") String password){
+                                       @RequestParam("password") String password,
+                                       RedirectAttributes attributes,
+                                        HttpServletRequest request) {
         cognitoService cognito = new cognitoService();
-        userBasic userBasic = cognito.userLogin(username,password);
-        if (userBasic!=null){
+        loginSession loginSession = cognito.userLogin(username,password);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        String body;
+        if (loginSession!=null){
             logger.info("login succeed");
-            /*
-            try {
-                attributes.addFlashAttribute("userBasic",userBasic);
-            } catch (Exception e){
-                logger.error(e.getMessage());
-                logger.info("cannot add attritbutes in redirectattributes");
-            }
-             */
             //attributes.addAttribute("userId",userBasic.getId());
-            return "redirect:/depoytest3/client/index/"+userBasic.getId();
+            if (loginSession.getAccess_token()!=null){
+               // request.setAttribute("Authorization",loginSession.getAccess_token());
+                return "redirect:/depoytest3/client/index/"+loginSession.getId();
+            }else{
+                attributes.addAttribute("message","please chagnge the temp password");
+                return"redirect:/depoytest3/client/login";
+            }
+
         }
-        return "redirect:/depoytest3/client/login";
+        attributes.addAttribute("message","the username or password is not valid");
+        return"redirect:/depoytest3/client/login";
     }
     @PostMapping("/register")
     public String register(@RequestParam String username,
                            @RequestParam String email,
-                           @RequestParam String nickname) throws Exception {
+                           @RequestParam String nickname,
+                           RedirectAttributes attributes) throws Exception {
         cognitoService cognito = new cognitoService();
         if (cognito.findUserByEmail(email)!=null) {
             logger.info("Email "+email+" has been registered");
+            attributes.addAttribute("message","Sorry,the email "+email+" has already been used.");
             return "redirect:/depoytest3/client/register";
         }
         try {
@@ -179,12 +205,32 @@ public class clientLoginController {
         }catch (Exception e){
             return e.getMessage();
         }
+        attributes.addAttribute("message","A temp password will be sent to your email");
         return  "redirect:/depoytest3/client/login";
+    }
+    @PostMapping("/reset")
+    public String resetPassword(@RequestParam String username,
+                                @RequestParam String oldPassword,
+                                @RequestParam String newPassword,
+                                RedirectAttributes attributes){
+        cognitoService cognito = new cognitoService();
+        boolean rslt = cognito.changeFromTempPassword(username,oldPassword,newPassword);
+        if (rslt){
+            attributes.addAttribute("message","Successfully Reset!");
+            return "redirect:/depoytest3/client/login";
+        } else{
+            attributes.addAttribute("message","Reset Failed, please check your username and password");
+            return "redirect:/depoytest3/client/reset";
+        }
     }
     @GetMapping("/logout")
     public String logout(HttpSession session,RedirectAttributes attributes) {
         session.removeAttribute("customer");
         attributes.addFlashAttribute("message","Successfully log out");
         return RELOGIN;
+    }
+    @ModelAttribute
+    private void setResponseHeader(HttpServletResponse response,String token){
+        response.setHeader("Authorization",token);
     }
 }

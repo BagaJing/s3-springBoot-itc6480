@@ -15,3 +15,5 @@ Solution: replace by putObject()
 https://stackoverflow.com/questions/37438879/unable-to-verify-secret-hash-for-client-in-amazon-cognito-userpools
 ### 7. Fail to load static resources:
 https://medium.com/@jstubblefield7939/serving-static-files-with-amazon-cloudfront-cdn-ccec91a985cd
+### 8. Cognito access_token is null
+https://stackoverflow.com/questions/44696421/respondtoauthchallengeresult-getauthenticationresult-return-null

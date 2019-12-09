@@ -12,6 +12,7 @@
         import org.slf4j.LoggerFactory;
         import vo.userBasic;
 
+        import java.util.Calendar;
         import java.util.HashMap;
         import java.util.List;
 
@@ -115,8 +116,8 @@ public class cognitoService implements cognitoInterface {
         return user;
     }
     //session login
-    public  userBasic userLogin(String username,String password){
-        userBasic info = null;
+    public  loginSession userLogin(String username,String password){
+        loginSession loginSession = null;
         SessionInfo sessionInfo = sessionLogin(username,password);
         // The process of sessionLogin should either return a session ID (if the account has not been verified) or a
         // token ID (if the account has been verified).
@@ -125,9 +126,11 @@ public class cognitoService implements cognitoInterface {
             logger.info(sessionInfo.getSession());
             logger.info(sessionInfo.getAccessToken());
             logger.info(sessionInfo.getChallengeResult());
-             info = getUserBasic(username);
+             userBasic info = getUserBasic(username);
+             loginSession = new loginSession(info.getId(),sessionInfo.getAccessToken());
+
         }
-        return info;
+        return loginSession;
     }
 
     /**
@@ -139,33 +142,48 @@ public class cognitoService implements cognitoInterface {
      */
     private SessionInfo sessionLogin(String username,String password) throws AWSCognitoIdentityProviderException{
             SessionInfo info = null;
-            HashMap<String, String> authParams = new HashMap<>();
+            AdminInitiateAuthRequest authRequest;
+            AdminInitiateAuthResult authResult;
+            try {
+                HashMap<String, String> authParams = new HashMap<>();
                 authParams.put("USERNAME", username);
                 authParams.put("PASSWORD", password);
-            AdminInitiateAuthRequest authRequest = new AdminInitiateAuthRequest()
-                    .withAuthFlow(AuthFlowType.ADMIN_NO_SRP_AUTH)
-                    .withUserPoolId(poolId)
-                    .withClientId(clientId)
-                    .withAuthParameters(authParams);
-            AdminInitiateAuthResult authResult = identityProvider.adminInitiateAuth(authRequest);
+                 authRequest = new AdminInitiateAuthRequest()
+                        .withAuthFlow(AuthFlowType.ADMIN_NO_SRP_AUTH)
+                        .withUserPoolId(poolId)
+                        .withClientId(clientId)
+                        .withAuthParameters(authParams);
+                authResult = identityProvider.adminInitiateAuth(authRequest);
+            } catch (Exception e){
+                authResult = null;
+            }
             if (authResult != null) {
                 final String session = authResult.getSession();
                 String accessToken = null;
                 AuthenticationResultType resultType = authResult.getAuthenticationResult();
                 if (resultType != null) {
-                    accessToken = resultType.getAccessToken();
-                }
+                    logger.info("access Token");
+                    logger.info(resultType.getAccessToken());
+                    logger.info("Id Token");
+                    logger.info(resultType.getIdToken());
+                    logger.info("Refresh Token");
+                    logger.info(resultType.getRefreshToken());
+                    logger.info("Token Type");
+                    logger.info(resultType.getTokenType());
+                    accessToken = resultType.getIdToken();
+                } else
+                    logger.info("authResult is null");
                 final String challengeResult = authResult.getChallengeName();
                 info = new SessionInfo(session, accessToken, challengeResult );
             }
             return info;
     }
-
     /**
      *
      * @param userName
      * @return userBasic
      */
+
     public userBasic getUserBasic(String userName){
         AdminGetUserRequest userRequest = new AdminGetUserRequest()
                 .withUsername(userName)
@@ -193,6 +211,62 @@ public class cognitoService implements cognitoInterface {
             info.setNickname(nickname);
         }
         return info;
+    }
+
+    /**
+     *
+     * @param username
+     * @param resetcode
+     * @param newPassword
+     * @return
+     * @throws AWSCognitoIdentityProviderException
+     */
+    public boolean resetPassword(String username,String resetcode,String newPassword) throws AWSCognitoIdentityProviderException{
+        try {
+            ConfirmForgotPasswordRequest passwordRequest = new ConfirmForgotPasswordRequest()
+                                                                .withUsername(username)
+                                                                .withConfirmationCode(resetcode)
+                                                                .withClientId(clientId)
+                                                                .withPassword(newPassword);
+            ConfirmForgotPasswordResult rslt = identityProvider.confirmForgotPassword(passwordRequest);
+            return true;
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     *
+     * @param username
+     * @param oldPassword
+     * @param newPassword
+     * @return
+     * @throws AWSCognitoIdentityProviderException
+     */
+    public boolean changeFromTempPassword(String username,String oldPassword,String newPassword) throws AWSCognitoIdentityProviderException{
+        final SessionInfo sessionInfo = sessionLogin(username,oldPassword);
+        final String sessionString = sessionInfo.getSession();
+        if (sessionString!=null&&sessionString.length()>0){
+            HashMap<String,String> challengeResponses = new HashMap<>();
+            challengeResponses.put("USERNAME",username);
+            challengeResponses.put("PASSWORD",oldPassword);
+            challengeResponses.put("NEW_PASSWORD",newPassword);
+             try {
+                 AdminRespondToAuthChallengeRequest changeRequest = new AdminRespondToAuthChallengeRequest()
+                                                                    .withChallengeName(ChallengeNameType.NEW_PASSWORD_REQUIRED)
+                                                                    .withChallengeResponses(challengeResponses)
+                                                                    .withClientId(clientId)
+                                                                    .withUserPoolId(poolId)
+                                                                    .withSession(sessionString);
+                 AdminRespondToAuthChallengeResult challengeResult = identityProvider.adminRespondToAuthChallenge(changeRequest);
+                 return true;
+             } catch (AWSCognitoIdentityProviderException e){
+                logger.error(e.getErrorMessage());
+                return false;
+             }
+        }
+        return false;
     }
 }
 
