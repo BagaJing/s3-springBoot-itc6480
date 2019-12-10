@@ -31,7 +31,7 @@ import java.io.UnsupportedEncodingException;
 @Controller
 //@RequestMapping("/client")
 
- @RequestMapping("/serverless/client") //test
+@RequestMapping("/serverless/client") //test
 public class clientController {
 
     private final static int DEFAULT_ORDER_LENTGH = 8;

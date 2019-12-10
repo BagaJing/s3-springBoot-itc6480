@@ -149,7 +149,8 @@ public class amazonClientImpl implements amazonClient {
         String response = "";
         try{
             //1.convert multipartFile into File, which the aws requires
-            File file = amazonUtils.convertMultiPartFile(multipartFile);
+            int random = (int)(Math.random()*9+1)*1000+(int)(Math.random()*9+1)*100+(int)(Math.random()*9+1)*10 +(int)Math.random();
+            File file = amazonUtils.convertMultiPartFile(multipartFile,"S"+String.valueOf(random));
             //2.generate a unique name
             String fileName = file.getName();
             System.out.println("Generate name "+fileName);
@@ -174,8 +175,9 @@ public class amazonClientImpl implements amazonClient {
         //   System.out.println("length: "+files.length);
         try{
             List<File> convertedFiles = new ArrayList<>();
+            int random = (int)(Math.random()*9+1)*1000+(int)(Math.random()*9+1)*100+(int)(Math.random()*9+1)*10 +(int)Math.random();
             for(int i = 0 ; i < files.length ; i++){
-                convertedFiles.add(amazonUtils.convertMultiPartFile(files[i]));
+                convertedFiles.add(amazonUtils.convertMultiPartFile(files[i],"Batch"+String.valueOf(random)));
               //  convertedFiles.add(files[i]);
             }
             List<String> errorList = new ArrayList<>();

@@ -7,6 +7,7 @@ public class userBasic {
     private String username;
     private String nickname;
     private String email;
+    private String creditNumber;
 
     public Long getId() {
         return id;
@@ -38,6 +39,14 @@ public class userBasic {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getCreditNumber() {
+        return creditNumber;
+    }
+
+    public void setCreditNumber(String creditNumber) {
+        this.creditNumber = creditNumber;
     }
 
     @Override

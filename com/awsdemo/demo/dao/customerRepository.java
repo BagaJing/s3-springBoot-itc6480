@@ -7,4 +7,5 @@ import org.springframework.data.jpa.repository.Query;
 public interface customerRepository extends JpaRepository<Customer,Long> {
     @Query("select c from Customer c where c.id=?1")
     Customer findOne(Long id);
+    Customer findByNickname(String nickname);
 }

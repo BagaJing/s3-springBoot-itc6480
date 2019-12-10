@@ -22,4 +22,9 @@ public class customerServiceImpl implements customerService {
     public Customer save(Customer customer) {
         return customerRepository.save(customer);
     }
+
+    @Override
+    public boolean isNicknameExist(String nickname) {
+        return customerRepository.findByNickname(nickname) == null;
+    }
 }

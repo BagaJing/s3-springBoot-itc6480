@@ -19,8 +19,6 @@ public interface amazonClient {
      List<String> getKeyFromS3Bucket(String subDir,String folderName);
      ResponseEntity<byte[]> download(String fileName) throws IOException;
      ResponseEntity<byte[]> downloadFolder(String path) throws IOException;
-     //ResponseEntity<Resource> download(String fileName) throws IOException;
-     //ResponseEntity<Resource> downloadFolder(String path) throws IOException;
      void deleteFile(String fileName);
      void deleteFolder(String prefix,String folderName);
      void renameFolder(String oldPrefix,String newFolder,int level);

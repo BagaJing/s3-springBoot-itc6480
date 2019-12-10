@@ -15,8 +15,8 @@ public class imageCheck {
                 errorList.add(file.getName()+" is not jpg file\n");
                 continue;
             }
-            if ((file.length()/1024.0) > 4000){
-                errorList.add(file.getName()+" is larger than 4MB\n");
+            if ((file.length()/1024.0) >= 3900){
+                errorList.add(file.getName()+" is not smaller than 4MB\n");
                 continue;
             }
             if (sourceImage.getWidth()>4200||sourceImage.getWidth()<600){

@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface customerService {
     Customer findCustomerById(Long id);
     Customer save(Customer customer);
+    boolean isNicknameExist(String nickname);
 }

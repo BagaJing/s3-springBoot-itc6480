@@ -2,54 +2,36 @@ package com.awsdemo.demo.controllers;
 
 
 
-import com.awsdemo.demo.interceptor.addHeaderFilter;
-import com.awsdemo.demo.interceptor.loginInterceptor;
 import com.awsdemo.demo.services.cognitoService;
+import com.awsdemo.demo.services.customerService;
 import com.awsdemo.demo.services.loginSession;
 import com.awsdemo.demo.services.transactionInterface;
-import org.apache.http.Header;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.view.RedirectView;
 import vo.userBasic;
 
 import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionContext;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Random;
 
 @Controller
 @RequestMapping("/serverless/client") //test
 //@RequestMapping("/client")
 public class clientLoginController {
-    private String RELOGIN = "redirect:/serverless/client/login";
-    private String REINDEX = "redirect:/serverless/client/index";
-    private String REREGISTER = "redirect:/serverless/client/index";
+
     private Logger logger = LoggerFactory.getLogger(getClass());
     @Autowired
     private transactionInterface transactionInterface;
+    @Autowired
+    private customerService customerService;
     @GetMapping("/test")
     public String test(HttpSession session){
         if (session == null)
@@ -172,7 +154,7 @@ public class clientLoginController {
                 attributes.addAttribute("token",loginSession.getAccess_token());
                 return "redirect:/serverless/client/index/"+loginSession.getId();
             }else{
-                attributes.addAttribute("message","please chagnge the temp password");
+                attributes.addAttribute("message","please change the temp password");
                 return "redirect:/serverless/client/login";
             }
 
@@ -183,8 +165,13 @@ public class clientLoginController {
     @PostMapping("/register")
     public String register(@RequestParam String username,
                            @RequestParam String email,
-                           @RequestParam String nickname,
+                           @RequestParam String credit,
                            RedirectAttributes attributes) throws Exception {
+        if (!customerService.isNicknameExist(username)){
+            logger.info("the username "+username+" has been used");
+            attributes.addAttribute("message","Sorry,the username "+username+" has already been used.");
+            return "redirect:/serverless/client/register";
+        }
         cognitoService cognito = new cognitoService();
         if (cognito.findUserByEmail(email)!=null) {
             logger.info("Email "+email+" has been registered");
@@ -196,7 +183,8 @@ public class clientLoginController {
             userBasic.setEmail(email);
             userBasic.setId(new Random().nextLong());
             userBasic.setUsername(username);
-            userBasic.setNickname(nickname);
+            userBasic.setNickname(username);
+            userBasic.setCreditNumber(credit);
             transactionInterface.createUser(userBasic);
         }catch (Exception e){
             return e.getMessage();
@@ -218,11 +206,5 @@ public class clientLoginController {
             attributes.addAttribute("message","Reset Failed, please check your username and password");
             return "redirect:/serverless/client/reset";
         }
-    }
-    @GetMapping("/logout")
-    public String logout(HttpSession session,RedirectAttributes attributes) {
-        session.removeAttribute("customer");
-        attributes.addFlashAttribute("message","Successfully log out");
-        return RELOGIN;
     }
 }

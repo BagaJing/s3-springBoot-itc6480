@@ -16,8 +16,8 @@ public class amazonUtils {
      *The springframework provides multipartFile Interface
      * Then convert process is needed
      */
-    public static File convertMultiPartFile(MultipartFile file) throws IOException {
-        File targetFile = new File("/tmp/"+generateFileName(file));
+    public static File convertMultiPartFile(MultipartFile file,String commonPrefix) throws IOException {
+        File targetFile = new File("/tmp/"+commonPrefix+"-"+generateFileName(file));
         FileOutputStream fos = new FileOutputStream(targetFile);
         fos.write(file.getBytes());
         fos.close();
@@ -50,7 +50,7 @@ public class amazonUtils {
      * use timestamp to generate it
      */
     private static String generateFileName(MultipartFile file){
-        return "XX"+file.getOriginalFilename().replace(" ","_");
+        return file.getOriginalFilename().replace(" ","_");
     }
     public static void printProgressBar(double pct){
         final int bar_size = 40;

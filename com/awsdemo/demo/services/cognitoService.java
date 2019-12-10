@@ -8,10 +8,6 @@
         import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
         import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder;
         import com.amazonaws.services.cognitoidp.model.*;
-        import com.auth0.jwt.JWT;
-        import com.auth0.jwt.algorithms.Algorithm;
-        import com.auth0.jwt.JWTVerifier;
-        import com.auth0.jwt.interfaces.RSAKeyProvider;
         import org.slf4j.Logger;
         import org.slf4j.LoggerFactory;
         import vo.userBasic;
@@ -77,7 +73,8 @@ public class cognitoService implements cognitoInterface {
                     .withUserAttributes(
                             new AttributeType().withName("email").withValue(customer.getEmail()),
                             new AttributeType().withName("nickname").withValue(customer.getNickname()),
-                            new AttributeType().withName("custom:id").withValue(String.valueOf(customer.getId()))
+                            new AttributeType().withName("custom:id").withValue(String.valueOf(customer.getId())),
+                            new AttributeType().withName("custom:creditcard").withValue(String.valueOf(customer.getCreditNumber()))
                     );
             identityProvider.adminCreateUser(cognitoRequest);
         }catch (Exception e){
@@ -124,10 +121,6 @@ public class cognitoService implements cognitoInterface {
         // The process of sessionLogin should either return a session ID (if the account has not been verified) or a
         // token ID (if the account has been verified).
         if (sessionInfo != null) {
-            logger.info("SessionInfo Content");
-            logger.info(sessionInfo.getSession());
-            logger.info(sessionInfo.getAccessToken());
-            logger.info(sessionInfo.getChallengeResult());
              userBasic info = getUserBasic(username);
              loginSession = new loginSession(info.getId(),sessionInfo.getAccessToken());
 
@@ -164,14 +157,6 @@ public class cognitoService implements cognitoInterface {
                 String accessToken = null;
                 AuthenticationResultType resultType = authResult.getAuthenticationResult();
                 if (resultType != null) {
-                    logger.info("access Token");
-                    logger.info(resultType.getAccessToken());
-                    logger.info("Id Token");
-                    logger.info(resultType.getIdToken());
-                    logger.info("Refresh Token");
-                    logger.info(resultType.getRefreshToken());
-                    logger.info("Token Type");
-                    logger.info(resultType.getTokenType());
                     accessToken = resultType.getAccessToken();
                 } else
                     logger.info("authResult is null");
@@ -270,22 +255,6 @@ public class cognitoService implements cognitoInterface {
         }
         return false;
     }
-    public boolean isValidToken(String token){
-        String aws_cognito_region = "us-east-1";
-        RSAKeyProvider keyProvider = new AwsCognitoRsaKeyProvider(aws_cognito_region,poolId);
-        Algorithm algorithm = Algorithm.RSA256(keyProvider);
-        JWTVerifier jwtVerifier = JWT.require(algorithm).build();
-        try {
-            jwtVerifier.verify(token);
-            logger.info("Verfiy Succeed");
-            return true;
-        } catch (Exception e){
-            logger.error(e.getMessage());
-            return false;
-        }
-
-    }
-
 }
 
 
