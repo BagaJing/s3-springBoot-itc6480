@@ -41,12 +41,12 @@ import java.util.List;
 import java.util.Random;
 
 @Controller
-//@RequestMapping("/depoytest3/client") //test
-@RequestMapping("/client")
+@RequestMapping("/serverless/client") //test
+//@RequestMapping("/client")
 public class clientLoginController {
-    private String RELOGIN = "redirect:/depoytest3/client/login";
-    private String REINDEX = "redirect:/depoytest3/client/index";
-    private String REREGISTER = "redirect:/depoytest3/client/index";
+    private String RELOGIN = "redirect:/serverless/client/login";
+    private String REINDEX = "redirect:/serverless/client/index";
+    private String REREGISTER = "redirect:/serverless/client/index";
     private Logger logger = LoggerFactory.getLogger(getClass());
     @Autowired
     private transactionInterface transactionInterface;
@@ -159,30 +159,26 @@ public class clientLoginController {
         model.addAttribute("message",message);
         return "reset";
     }
-    @CrossOrigin
     @PostMapping("/login")
     public String login(@RequestParam("username") String username,
                                        @RequestParam("password") String password,
-                                       RedirectAttributes attributes,
-                                        HttpServletRequest request) {
+                                       RedirectAttributes attributes) throws IOException {
         cognitoService cognito = new cognitoService();
         loginSession loginSession = cognito.userLogin(username,password);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        String body;
         if (loginSession!=null){
             logger.info("login succeed");
             //attributes.addAttribute("userId",userBasic.getId());
             if (loginSession.getAccess_token()!=null){
-               // request.setAttribute("Authorization",loginSession.getAccess_token());
-                return "redirect:/depoytest3/client/index/"+loginSession.getId();
+                attributes.addAttribute("token",loginSession.getAccess_token());
+                return "redirect:/serverless/client/index/"+loginSession.getId();
             }else{
                 attributes.addAttribute("message","please chagnge the temp password");
-                return"redirect:/depoytest3/client/login";
+                return "redirect:/serverless/client/login";
             }
 
         }
-        attributes.addAttribute("message","the username or password is not valid");
-        return"redirect:/depoytest3/client/login";
+        attributes.addAttribute("message","the username or the password is not valid");
+        return"redirect:/serverless/client/login";
     }
     @PostMapping("/register")
     public String register(@RequestParam String username,
@@ -193,7 +189,7 @@ public class clientLoginController {
         if (cognito.findUserByEmail(email)!=null) {
             logger.info("Email "+email+" has been registered");
             attributes.addAttribute("message","Sorry,the email "+email+" has already been used.");
-            return "redirect:/depoytest3/client/register";
+            return "redirect:/serverless/client/register";
         }
         try {
             userBasic userBasic = new userBasic();
@@ -206,7 +202,7 @@ public class clientLoginController {
             return e.getMessage();
         }
         attributes.addAttribute("message","A temp password will be sent to your email");
-        return  "redirect:/depoytest3/client/login";
+        return  "redirect:/serverless/client/login";
     }
     @PostMapping("/reset")
     public String resetPassword(@RequestParam String username,
@@ -217,10 +213,10 @@ public class clientLoginController {
         boolean rslt = cognito.changeFromTempPassword(username,oldPassword,newPassword);
         if (rslt){
             attributes.addAttribute("message","Successfully Reset!");
-            return "redirect:/depoytest3/client/login";
+            return "redirect:/serverless/client/login";
         } else{
             attributes.addAttribute("message","Reset Failed, please check your username and password");
-            return "redirect:/depoytest3/client/reset";
+            return "redirect:/serverless/client/reset";
         }
     }
     @GetMapping("/logout")
@@ -228,9 +224,5 @@ public class clientLoginController {
         session.removeAttribute("customer");
         attributes.addFlashAttribute("message","Successfully log out");
         return RELOGIN;
-    }
-    @ModelAttribute
-    private void setResponseHeader(HttpServletResponse response,String token){
-        response.setHeader("Authorization",token);
     }
 }

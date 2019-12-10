@@ -11,6 +11,7 @@ import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.transfer.*;
 import com.awsdemo.demo.utils.amazonUtils;
 import com.awsdemo.demo.utils.contentTypeUtils;
+import com.awsdemo.demo.utils.imageCheck;
 import com.awsdemo.demo.utils.zipUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -177,7 +178,13 @@ public class amazonClientImpl implements amazonClient {
                 convertedFiles.add(amazonUtils.convertMultiPartFile(files[i]));
               //  convertedFiles.add(files[i]);
             }
-            //  System.out.println("size: "+convertedFiles.size());
+            List<String> errorList = new ArrayList<>();
+            imageCheck.isImageValid(convertedFiles,errorList);
+            if(errorList.size()!=0){
+                for (File file : convertedFiles)
+                    file.delete();
+                return "Error: "+errorList.toString();
+            }
            response = batchUploadToS3Bucket(convertedFiles,dir,folderName);
         } catch (Exception e){
             response = e.getMessage();

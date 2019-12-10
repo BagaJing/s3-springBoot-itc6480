@@ -8,11 +8,13 @@
         import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
         import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder;
         import com.amazonaws.services.cognitoidp.model.*;
+        import com.auth0.jwt.JWT;
+        import com.auth0.jwt.algorithms.Algorithm;
+        import com.auth0.jwt.JWTVerifier;
+        import com.auth0.jwt.interfaces.RSAKeyProvider;
         import org.slf4j.Logger;
         import org.slf4j.LoggerFactory;
         import vo.userBasic;
-
-        import java.util.Calendar;
         import java.util.HashMap;
         import java.util.List;
 
@@ -23,8 +25,8 @@ public class cognitoService implements cognitoInterface {
     //@Value("${CognitoProperties.sKey}")
     private String cognitoSecretKey = "";
     //@Value("${CognitoProperties.userPool}")
-    private String poolId = "";
-    private String clientId = "";
+    private String poolId = "us-east-1_Y2PgefGKO";
+    private String clientId = "1a6tk1v013uc0vus57gg9ghoji";
     private AWSCognitoIdentityProvider identityProvider = null;
     public cognitoService() {
         //logger.info(cognitoAccessKey);
@@ -170,7 +172,7 @@ public class cognitoService implements cognitoInterface {
                     logger.info(resultType.getRefreshToken());
                     logger.info("Token Type");
                     logger.info(resultType.getTokenType());
-                    accessToken = resultType.getIdToken();
+                    accessToken = resultType.getAccessToken();
                 } else
                     logger.info("authResult is null");
                 final String challengeResult = authResult.getChallengeName();
@@ -268,6 +270,22 @@ public class cognitoService implements cognitoInterface {
         }
         return false;
     }
+    public boolean isValidToken(String token){
+        String aws_cognito_region = "us-east-1";
+        RSAKeyProvider keyProvider = new AwsCognitoRsaKeyProvider(aws_cognito_region,poolId);
+        Algorithm algorithm = Algorithm.RSA256(keyProvider);
+        JWTVerifier jwtVerifier = JWT.require(algorithm).build();
+        try {
+            jwtVerifier.verify(token);
+            logger.info("Verfiy Succeed");
+            return true;
+        } catch (Exception e){
+            logger.error(e.getMessage());
+            return false;
+        }
+
+    }
+
 }
 
 

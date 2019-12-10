@@ -64,6 +64,10 @@ public class action {
         logger.info("dir "+dir);
         try{
             uploadResponse = amazonClient.batchUploadFiles(files,dir,folderName);
+            if (uploadResponse.startsWith("Error")) {
+                logger.info("File rejected");
+                attributes.addAttribute("rejected", uploadResponse);
+            }
             logger.info(uploadResponse);
 
         }catch (Exception e){
